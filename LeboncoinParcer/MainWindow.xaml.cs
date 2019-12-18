@@ -23,8 +23,8 @@ namespace LeboncoinParser
 
         public MainWindow()
         {
-            InitializeComponent();
-            InitDataGrid();
+            //InitializeComponent();
+            //InitDataGrid();
             LeboncoinParcer.Parser.Test();
         }
 
