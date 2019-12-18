@@ -8,8 +8,6 @@ using System.Text;
 using System.Windows.Controls;
 using HtmlAgilityPack;
 using System.Linq;
-using OpenQA.Selenium;
-using OpenQA.Selenium.PhantomJS;
 using System.Threading.Tasks;
 
 namespace LeboncoinParcer
@@ -18,7 +16,8 @@ namespace LeboncoinParcer
     {
         public static void Test()
         {
-            ProxyData.GetAvalibleProxy();
+            IsBlocked();
+            //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
             //var test = CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS");
             //GetResp("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
         }
@@ -62,7 +61,37 @@ namespace LeboncoinParcer
 
             }
         }
-        
+        public static bool IsBlocked(WebProxy proxy = null)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
+            if (proxy != null)
+                request.Proxy = proxy;
+            request.CookieContainer = new CookieContainer();
+            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+            request.Headers.Add("accept-encoding: gzip, deflate, br");
+            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
+            request.Headers.Add("Cache-Control: no-cache");
+            request.Host = "www.leboncoin.fr";
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string page = "";
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                using (Stream receiveStream = response.GetResponseStream())
+                {
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.Load(receiveStream);
+                    page = doc.Text;
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(page);
+                    var node = htmlDoc.DocumentNode.SelectSingleNode("//head/title");
+                    if (node.OuterHtml != @"<title>You have been blocked</title>")//TODO Check
+                        return false;
+                }
+            }
+            return true;
+        }
         public static string GetCookies(string url)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
@@ -138,20 +167,23 @@ namespace LeboncoinParcer
         /// <param name="URL">Testing url</param>
         /// <param name="ProxyList">Proxy Line Format adress:port#username#pass</param>
         /// <returns></returns>
-        public IEnumerable<WebProxy> GetAvalibleProxy(string URL, IEnumerable<string> ProxyList, int MaxDegreeParallelism = 4)
+        public static IEnumerable<WebProxy> GetAvalibleProxy(string URL, IEnumerable<string> ProxyList, int MaxDegreeParallelism = 4)
         {
             ProxyList = ProxyList.Where(x => !string.IsNullOrWhiteSpace(x));
+            object locker = new object();
             List<ProxyData> Proxs = new List<ProxyData> { };
-            Parallel.ForEach(ProxyList, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeParallelism }, o =>
+            Parallel.ForEach(ProxyList, o =>
             {
                 if (!o.Contains('#'))
                 {
-                    Proxs.Add(new ProxyData { Adress = o });
+                    lock (locker)
+                        Proxs.Add(new ProxyData { Adress = o });
                     return;
                 }
                 string[] array = o.Split('#');//TODO проверить если нет юзера и пароля
                 if (array.Length > 2)
-                    Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
+                    lock (locker)
+                        Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
             }
             );
             foreach (var item in Proxs)
@@ -163,66 +195,14 @@ namespace LeboncoinParcer
                     else
                         yield return new WebProxy(item.Adress);
                 }
+                else
+                {
+
+                }
             }
         }
     }
 
 
-    class Phantom
-    {
-        [Obsolete]
-        public PhantomJSDriver PJS { get; set; }
-        public PhantomJSOptions options { get; set; }
-        public Proxy CurrentProxy { get; set; }
 
-        [Obsolete]
-        public Phantom(bool EnableProxy)
-        {
-            options = new PhantomJSOptions();
-            options.AddAdditionalCapability("phantomjs.page.settings.userAgent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36");
-            var service = PhantomJSDriverService.CreateDefaultService();
-            if (EnableProxy)
-            {
-                string padress = "51.91.212.159:3128";
-                CurrentProxy = new Proxy();
-                CurrentProxy.HttpProxy = string.Format(padress);
-                service.ProxyType = "http";
-                service.Proxy = CurrentProxy.HttpProxy;
-            }
-            service.LoadImages = false;
-            service.HideCommandPromptWindow = true;
-            PJS = new PhantomJSDriver(service, options);
-            PJS.Manage().Window.Size = new System.Drawing.Size(1920, 1080);
-            PJS.Manage().Cookies.DeleteAllCookies();
-        }
-        public static void Test()
-        {
-            try
-            {//Todo Enable Proxy
-                #region PHantom
-                //Parser pars1 = new Parser(false);
-                //pars1.PJS.Navigate().GoToUrl(@"https://google.com");//https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
-                //var cookies = pars1.PJS.Manage().Cookies.AllCookies;
-                //(pars1.PJS as PhantomJSDriver).GetScreenshot().SaveAsFile("scren.png");
-                //NextPage(pars1.PJS);
-                //var html = (pars1.PJS as PhantomJSDriver).PageSource;
-                //pars1.PJS.Quit();
-                //File.WriteAllText("Page.html", html);
-                #endregion
-            }
-            catch (Exception exc)
-            {
-            }
-        }
-
-        [Obsolete]
-        public static void NextPage(PhantomJSDriver PJS)
-        {
-            var next = PJS.FindElementByName("chevronright").FindElement(By.XPath("./parent::*"));
-            next.Click();
-        }
-
-
-
-    }
 }
