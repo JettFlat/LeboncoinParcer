@@ -16,10 +16,17 @@ namespace LeboncoinParcer
     {
         public static void Test()
         {
-            IsBlocked();
-            //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
-            //var test = CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS");
-            //GetResp("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
+            try
+            {
+                //IsBlocked();
+                //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
+                //var test = CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS");
+                //GetResp("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
+            }
+            catch (Exception exc)
+            {
+
+            }
         }
         public static void GetResp(string url)
         {
@@ -63,7 +70,7 @@ namespace LeboncoinParcer
         }
         public static bool IsBlocked(WebProxy proxy = null)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.leboncoin.fr");
             if (proxy != null)
                 request.Proxy = proxy;
             request.CookieContainer = new CookieContainer();
@@ -74,7 +81,16 @@ namespace LeboncoinParcer
             request.Headers.Add("Cache-Control: no-cache");
             request.Host = "www.leboncoin.fr";
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpWebResponse response = new HttpWebResponse();
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (System.Net.WebException exc)
+            {
+                if (exc.Message == "The remote server returned an error: (403) Forbidden.")
+                    return true;
+            }
             string page = "";
             if (response.StatusCode == HttpStatusCode.OK)
             {
