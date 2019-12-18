@@ -9,15 +9,36 @@ using System.Windows.Controls;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace LeboncoinParcer
 {
     class Parser
     {
+        static ObservableCollection<WebProxy> _Proxies =new ObservableCollection<WebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList());
+        static ObservableCollection<WebProxy> Proxies
+        {
+            get => _Proxies;
+            set
+            {
+                _Proxies = value;
+            }
+        }
         public static void Test()
         {
+            Proxies.CollectionChanged += Proxies_CollectionChanged;
             try
             {
+                var test = Proxies;
+                Task.Run(() =>
+                {
+                    System.Threading.Thread.Sleep(5000);
+                    Proxies.Add(test[0]);
+                    Proxies.Add(test[1]);
+                }
+                );
+                for(int i=0;i<Proxies.Count;i++)
+                    Proxies.RemoveAt(0);
                 //IsBlocked();
                 //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
                 //var test = CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS");
@@ -28,45 +49,51 @@ namespace LeboncoinParcer
 
             }
         }
-        public static void GetResp(string url)
-        {
-            try
+
+        private static void Proxies_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {//TODO check WORK
+            var list = sender as ObservableCollection<WebProxy>;
+            if (list.Count<1)
             {
-                string proxyadress = "94.23.183.169:7951";
-                if (!ProxyData.CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS"))
-                    throw new Exception("Proxy Exception");
-
-
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Proxy = new WebProxy(proxyadress, false, null, new NetworkCredential("igp1091139", "1DraM7lfNS"));
-                request.CookieContainer = new CookieContainer();
-                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
-                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-                request.Headers.Add("accept-encoding: gzip, deflate, br");
-                request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
-                request.Headers.Add("Cache-Control: no-cache");
-
-                request.Host = "www.leboncoin.fr";
-                //request.Headers.Add("Postman-Token: acbce3eb-50ca-4b26-a043-9bd6cd5a042f");
-
-                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                string page = "";
-                if (response.StatusCode == HttpStatusCode.OK)
+                while(list.Count<1)
                 {
-                    using (Stream receiveStream = response.GetResponseStream())
-                    {
-                        HtmlDocument doc = new HtmlDocument();
-                        doc.Load(receiveStream);
-                        page = doc.Text;
-                    }
+                    System.Threading.Thread.Sleep(1000);
                 }
-                response.Close();
             }
-            catch (Exception excc)
-            {
+        }
 
+        public static void GetPage(string url)
+        {
+            foreach (var proxy in ProxyData.GetAvalibleProxy("https://www.leboncoin.fr", File.ReadAllLines("ProxyListEdited.pl")))
+            {
+                while (IsBlocked())
+                {
+                }
             }
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Proxy = new WebProxy("UsePROOOOOXY", false, null, new NetworkCredential("igp1091139", "1DraM7lfNS"));
+            request.CookieContainer = new CookieContainer();
+            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+            request.Headers.Add("accept-encoding: gzip, deflate, br");
+            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
+            request.Headers.Add("Cache-Control: no-cache");
+            request.Host = "www.leboncoin.fr";
+            //request.Headers.Add("Postman-Token: acbce3eb-50ca-4b26-a043-9bd6cd5a042f");
+
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string page = "";
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                using (Stream receiveStream = response.GetResponseStream())
+                {
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.Load(receiveStream);
+                    page = doc.Text;
+                }
+            }
+            response.Close();
         }
         public static bool IsBlocked(WebProxy proxy = null)
         {
