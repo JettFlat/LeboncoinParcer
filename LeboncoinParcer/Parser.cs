@@ -15,41 +15,42 @@ using System.ComponentModel;
 
 namespace LeboncoinParcer
 {
+    public class Test
+    {
+        public static void Testing()
+        {
+            Parser.Parse(File.ReadAllText(@"D:\WORK\LeboncoinParcer\Test\Page.html"));
+        }
+    }
     class Parser
     {
-        static ProxyContainer _ProxyContainer = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList()));
-        public static ProxyContainer ProxyContainer
-        {
-            get
-            {
-                return _ProxyContainer;
-            }
-            set
-            {
-                _ProxyContainer = value;
-            }
-        }
+        public static object clocker = new object();
+        public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
             try
             {
                 ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-                GetPage("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
-                //var test = new ObservableCollection<WebProxy>(Proxies);
-                //Task.Run(() =>
-                //{
-                //    System.Threading.Thread.Sleep(5000);
-                //    Proxies.Add(test[0]);
-                //    Proxies.Add(test[1]);
-                //}
-                //);
-                //int col = Proxies.Count;
-                //for (int i = 0; i < col; i++)
-                //    Proxies.RemoveAt(0);
-                //IsBlocked();
-                //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
-                //var test = CheckProxy("https://google.com/", "94.23.183.169:7951", "igp1091139", "1DraM7lfNS");
-                //GetResp("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1");
+                string url = "https://www.leboncoin.fr";
+                string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
+                object locker = new object();
+                int count = 1;
+                new DirectoryInfo(@"pages").Create();
+                Task.Run(() =>
+                {
+                    while (path != null)
+                    {
+                        path = null;
+                            string page = null;
+                            while (page == null)
+                                page = GetPage(url + path, 5000);
+                            lock (locker)
+                                File.WriteAllText($@"pages/{count}.html", page);
+                            path = Parse(page);
+                            lock (locker)
+                                count++;
+                    }
+                }).Wait();
             }
             catch (Exception exc)
             {
@@ -62,13 +63,17 @@ namespace LeboncoinParcer
             throw new Exception("All Proxies banned");
         }
 
-        public static string GetPage(string url)
+        public static string GetPage(string url, int Sleepms)
         {
-            var precount = ProxyContainer.Collections.Count;
+            //UseLOCKER
+            System.Threading.Thread.Sleep(Sleepms);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            var p = ProxyContainer.Collections.Cut();
-            var unt = ProxyContainer.Collections.Count;
-            request.Proxy = p;
+            var p = new CustomWebProxy();
+            lock (clocker)
+            {
+                p = ProxyContainer.Collections.Cut();
+                request.Proxy = p;
+            }
             request.CookieContainer = new CookieContainer();
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
             request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
@@ -77,7 +82,20 @@ namespace LeboncoinParcer
             request.Headers.Add("Cache-Control: no-cache");
             request.Host = "www.leboncoin.fr";
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpWebResponse response = new HttpWebResponse();
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (Exception)
+            {
+                p.IsBanned = true;
+                lock (clocker)
+                    ProxyContainer.Collections.Add(p);
+                return null;
+            }
+            lock (clocker)
+                ProxyContainer.Collections.Add(p);//Возможно прокси разбанят так что добавить isbanned=false
             string page = "";
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -90,8 +108,22 @@ namespace LeboncoinParcer
                 }
             }
             if (response.StatusCode == HttpStatusCode.Forbidden)
-                p.IsBanned = true;
+                p.IsBanned = true;//TODO check Proxycontainer ban values
             response.Close();
+            return null;
+        }
+        public static string Parse(string html)
+        {
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+            try
+            {
+                var path = htmlDoc.DocumentNode.SelectSingleNode("//span[@name='chevronright']").ParentNode.Attributes.Where(x => x.Name == "href").FirstOrDefault().DeEntitizeValue;
+                return path;
+            }
+            catch (Exception)
+            {
+            }
             return null;
         }
         public static bool IsBlocked(WebProxy proxy = null)
@@ -203,6 +235,33 @@ namespace LeboncoinParcer
             catch (Exception) { }
             return false;
         }
+        public static IEnumerable<CustomWebProxy> GetProxy(IEnumerable<string> ProxyList)
+        {
+            ProxyList = ProxyList.Where(x => !string.IsNullOrWhiteSpace(x));
+            object locker = new object();
+            List<ProxyData> Proxs = new List<ProxyData> { };
+            Parallel.ForEach(ProxyList, o =>
+            {
+                if (!o.Contains('#'))
+                {
+                    lock (locker)
+                        Proxs.Add(new ProxyData { Adress = o });
+                    return;
+                }
+                string[] array = o.Split('#');//TODO проверить если нет юзера и пароля
+                if (array.Length > 2)
+                    lock (locker)
+                        Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
+            }
+            );
+            foreach (var item in Proxs)
+            {
+                if (item.UserName != null && item.Password != null)
+                    yield return new CustomWebProxy(item.Adress, false, null, new NetworkCredential(item.UserName, item.Password));
+                else
+                    yield return new CustomWebProxy(item.Adress);
+            }
+        }
         /// <summary>
         /// Get avalible http proxy 
         /// </summary>
@@ -308,33 +367,25 @@ namespace LeboncoinParcer
     public class ProxyContainer
     {//TODO CHECK WORK
         public ObservableCollection<CustomWebProxy> Collections { get; set; }
-        public bool IsAllBaned
-        {
-            get
-            {
-                bool val = !Collections.Any(x => x.IsBanned == false);
-                if (val == true)
-                    Allbaned();
-                return val;
-            }
-        }
+        public int StartCount { get; }
+        //public object locker { get; } = new object();
         public delegate void MethodContainer();
         public event MethodContainer Allbaned;
         public ProxyContainer(ObservableCollection<CustomWebProxy> proxies)
         {
             Collections = new ObservableCollection<CustomWebProxy>(proxies);
+            StartCount = Collections.Count;
             Collections.CollectionChanged += Collections_CollectionChanged;
         }
         private void Collections_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
+        {//TODO Use locker?
             var list = sender as ObservableCollection<CustomWebProxy>;
+            if (list.Count == StartCount)
+                if (!list.Any(x => x.IsBanned == false))
+                    Allbaned();
             if (list.Count < 1)
-            {
                 while (list.Count < 1)
-                {
                     System.Threading.Thread.Sleep(1000);
-                }
-            }
         }
     }
 
