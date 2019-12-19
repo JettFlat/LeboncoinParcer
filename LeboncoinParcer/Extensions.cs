@@ -9,7 +9,7 @@ namespace LeboncoinParcer
 {
     public static class Extensions
     {
-        public static WebProxy Cut(this ObservableCollection<WebProxy> items, WebProxy item)
+        public static CustomWebProxy Cut(this ObservableCollection<CustomWebProxy> items, CustomWebProxy item)
         {
             if (items.Contains(item))
             {
@@ -18,7 +18,7 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static WebProxy Cut(this ObservableCollection<WebProxy> items)
+        public static CustomWebProxy Cut(this ObservableCollection<CustomWebProxy> items)
         {
             if (items.Count < 1)
                 return null;
