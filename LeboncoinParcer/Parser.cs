@@ -33,24 +33,17 @@ namespace LeboncoinParcer
                 ProxyContainer.Allbaned += ProxyContainer_Allbaned;
                 string url = "https://www.leboncoin.fr";
                 string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
-                object locker = new object();
                 int count = 1;
                 new DirectoryInfo(@"pages").Create();
-                Task.Run(() =>
+                while (path != null)
                 {
-                    while (path != null)
-                    {
-                        path = null;
-                            string page = null;
-                            while (page == null)
-                                page = GetPage(url + path, 5000);
-                            lock (locker)
-                                File.WriteAllText($@"pages/{count}.html", page);
-                            path = Parse(page);
-                            lock (locker)
-                                count++;
-                    }
-                }).Wait();
+                    string page = null;
+                    while (page == null)
+                        page = GetPage(url + path);
+                    File.WriteAllText($@"pages/{count}.html", page);
+                    path = Parse(page);
+                    count++;
+                }
             }
             catch (Exception exc)
             {
@@ -63,10 +56,11 @@ namespace LeboncoinParcer
             throw new Exception("All Proxies banned");
         }
 
-        public static string GetPage(string url, int Sleepms)
+        public static string GetPage(string url, int Sleepms = 0)
         {
             //UseLOCKER
-            System.Threading.Thread.Sleep(Sleepms);
+            if (Sleepms > 0)
+                System.Threading.Thread.Sleep(Sleepms);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             var p = new CustomWebProxy();
             lock (clocker)
