@@ -17,7 +17,18 @@ namespace LeboncoinParcer
 {
     class Parser
     {
-        public static ProxyContainer ProxyContainer => new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList()));
+        static ProxyContainer _ProxyContainer = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList()));
+        public static ProxyContainer ProxyContainer
+        {
+            get
+            {
+                return _ProxyContainer;
+            }
+            set
+            {
+                _ProxyContainer = value;
+            }
+        }
         public static void Start()
         {
             try
@@ -53,8 +64,10 @@ namespace LeboncoinParcer
 
         public static string GetPage(string url)
         {
+            var precount = ProxyContainer.Collections.Count;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            var p = ProxyContainer.Collections.Cut(); //TODO check ProxyContainer Collection cont
+            var p = ProxyContainer.Collections.Cut();
+            var unt = ProxyContainer.Collections.Count;
             request.Proxy = p;
             request.CookieContainer = new CookieContainer();
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
@@ -309,13 +322,12 @@ namespace LeboncoinParcer
         public event MethodContainer Allbaned;
         public ProxyContainer(ObservableCollection<CustomWebProxy> proxies)
         {
-            Collections = proxies;
+            Collections = new ObservableCollection<CustomWebProxy>(proxies);
             Collections.CollectionChanged += Collections_CollectionChanged;
         }
-
         private void Collections_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            var list = sender as ObservableCollection<WebProxy>;
+            var list = sender as ObservableCollection<CustomWebProxy>;
             if (list.Count < 1)
             {
                 while (list.Count < 1)
