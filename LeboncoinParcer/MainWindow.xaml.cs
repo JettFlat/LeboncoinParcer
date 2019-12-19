@@ -25,8 +25,8 @@ namespace LeboncoinParser
         {
             //InitializeComponent();
             //InitDataGrid();
-            LeboncoinParcer.Test.Testing();
-            //LeboncoinParcer.Parser.Start();
+            //LeboncoinParcer.Test.Testing();
+            LeboncoinParcer.Parser.Start();
         }
 
         private void InitDataGrid()

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using SQLiteAspNetCoreDemo;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace LeboncoinParcer
 {
@@ -16,20 +17,15 @@ namespace LeboncoinParcer
     {
         public static void Testing()
         {
-            using (var context = new SQLiteDBContext())
-            {
-                context.Realtys.Add(new Realty { Id = 2344, Date = DateTime.Now });
-                //var test = context.Realtys;
-                context.SaveChanges();
-            }
-            //var test = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "107.1.80.141:80");
-            //var test1 = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "204.12.202.198:3128");
-            //Parallel.For(1, 100, o =>
+            var list = Parser.ParseRealtyUrl(File.ReadAllText(@"D:\WORK\Backup\pages\93.html"));
+            string rt = "https://www.leboncoin.fr/locations/1724535725.htm/";
+            rt = System.Text.RegularExpressions.Regex.Replace(rt, @"[^\d]+", "");
+            //using (var context = new SQLiteDBContext())
             //{
-            //    Task.Run(() => ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "151.236.13.116:7951", "igp1091139", "1DraM7lfNS"));
-            //    Task.Run(() => ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "62.141.55.202:7951", "igp1091139", "1DraM7lfNS"));
-            //});
-            // System.Threading.Thread.Sleep(50000000);
+            //    context.Realtys.Add(new Realty { Id = 2344, Date = DateTime.Now });
+            //    //var test = context.Realtys;
+            //    context.SaveChanges();
+            //}
         }
     }
     class Parser
@@ -38,27 +34,70 @@ namespace LeboncoinParcer
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
+            ProxyContainer.Allbaned += ProxyContainer_Allbaned;
+            var linkpages = GetAllPages();
+            BinaryFormatter formatter = new BinaryFormatter();
+            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            {
+                formatter.Serialize(fs, linkpages);
+            }
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    List<string> deserilize = (List<string>)formatter.Deserialize(fs);
+            //}
+            foreach (var o in linkpages)
+                WritePages(ParseRealtyUrl(o));
+            //Parallel.ForEach(linkpages, o => {
+            //    WritePages(ParseRealtyUrl(o));
+            //});
+            //var list = Parser.ParseRealtyUrl(File.ReadAllText(@"D:\WORK\Backup\pages\93.html"));
+            //WritePages(list);
+        }
+        public static List<string> GetAllPages()
+        {
+            List<string> Parsed = new List<string> { };
+            string url = "https://www.leboncoin.fr";
+            string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
+            int count = 1;
+            while (path != null)
+            {
+                string page = null;
+                while (page == null)
+                    page = GetPage(url + path);
+                Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
+                path = Parse(page);
+                count++;
+            }
+            return Parsed;
+        }
+        public static List<string> ParseRealtyUrl(string html)
+        {
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
             try
             {
-                ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-                string url = "https://www.leboncoin.fr";
-                string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
-                int count = 1;
-                new DirectoryInfo(@"pages").Create();
-                while (path != null)
-                {
-                    string page = null;
-                    while (page == null)
-                        page = GetPage(url + path);
-                    File.WriteAllText($@"pages/{count}.html", page);
-                    path = Parse(page);
-                    count++;
-                }
+                var elements = htmlDoc.DocumentNode.SelectNodes("//a[@class='clearfix trackable']");
+                return elements.Select(x => x.Attributes["href"]).Select(y => $"https://www.leboncoin.fr{y.DeEntitizeValue}").ToList();
             }
-            catch (Exception exc)
+            catch (Exception) { }
+            return null;
+        }
+        public static List<string> GetPages(List<string> UrlContainer)
+        {
+            List<string> results = new List<string> { };
+            Parallel.ForEach(UrlContainer, o =>
             {
-
-            }
+                results.Add(GetPage(o));
+            });
+            return results;
+        }
+        static void WritePages(List<string> UrlContainer, string path = @"pages/Realty/")
+        {
+            new DirectoryInfo(path).Create();
+            Parallel.ForEach(UrlContainer, o =>
+            {
+                File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", GetPage(o));
+            });
         }
 
         private static void ProxyContainer_Allbaned()
@@ -242,7 +281,7 @@ namespace LeboncoinParcer
                         return false;
                 }
             }
-            catch (Exception) 
+            catch (Exception)
             {
             }
             return true;
