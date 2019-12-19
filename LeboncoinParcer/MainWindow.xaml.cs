@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,8 +25,8 @@ namespace LeboncoinParser
         {
             //InitializeComponent();
             //InitDataGrid();
-            //LeboncoinParcer.Test.Testing();
-            LeboncoinParcer.Parser.Start();
+            LeboncoinParcer.Test.Testing();
+            //LeboncoinParcer.Parser.Start();
         }
 
         private void InitDataGrid()
@@ -135,7 +135,7 @@ namespace LeboncoinParser
             if (File.Exists(DatabaseFileName))
                 return;
 
-            SQLiteConnection.CreateFile(DatabaseFileName);
+            //SQLiteConnection.CreateFile(DatabaseFileName);
             CreateTable();
         }
         

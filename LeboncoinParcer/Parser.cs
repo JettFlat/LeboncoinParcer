@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Net.NetworkInformation;
 using System.Text;
-using System.Windows.Controls;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-using System.ComponentModel;
+using SQLiteAspNetCoreDemo;
 
 namespace LeboncoinParcer
 {
@@ -19,14 +16,20 @@ namespace LeboncoinParcer
     {
         public static void Testing()
         {
-            var test = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "107.1.80.141:80");
-            var test1 = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "204.12.202.198:3128");
+            using (var context = new SQLiteDBContext())
+            {
+                context.Realtys.Add(new Realty { Id = 2344, Date = DateTime.Now });
+                //var test = context.Realtys;
+                context.SaveChanges();
+            }
+            //var test = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "107.1.80.141:80");
+            //var test1 = ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "204.12.202.198:3128");
             //Parallel.For(1, 100, o =>
             //{
             //    Task.Run(() => ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "151.236.13.116:7951", "igp1091139", "1DraM7lfNS"));
             //    Task.Run(() => ProxyData.Baning("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1", "62.141.55.202:7951", "igp1091139", "1DraM7lfNS"));
             //});
-           // System.Threading.Thread.Sleep(50000000);
+            // System.Threading.Thread.Sleep(50000000);
         }
     }
     class Parser
