@@ -10,12 +10,14 @@ using HtmlAgilityPack;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace LeboncoinParcer
 {
     class Parser
     {
-        static ObservableCollection<WebProxy> _Proxies =new ObservableCollection<WebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList());
+        static ObservableCollection<WebProxy> _Proxies = new ObservableCollection<WebProxy>(ProxyData.GetAvalibleProxy("https://www.google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList());
         static ObservableCollection<WebProxy> Proxies
         {
             get => _Proxies;
@@ -29,7 +31,7 @@ namespace LeboncoinParcer
             Proxies.CollectionChanged += Proxies_CollectionChanged;
             try
             {
-                var test = Proxies;
+                var test = new ObservableCollection<WebProxy>(Proxies);
                 Task.Run(() =>
                 {
                     System.Threading.Thread.Sleep(5000);
@@ -37,7 +39,8 @@ namespace LeboncoinParcer
                     Proxies.Add(test[1]);
                 }
                 );
-                for(int i=0;i<Proxies.Count;i++)
+                int col = Proxies.Count;
+                for (int i = 0; i < col; i++)
                     Proxies.RemoveAt(0);
                 //IsBlocked();
                 //var spisok = ProxyData.GetAvalibleProxy("https://google.com", File.ReadAllLines("ProxyListEdited.pl")).ToList();
@@ -51,27 +54,21 @@ namespace LeboncoinParcer
         }
 
         private static void Proxies_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {//TODO check WORK
+        {
             var list = sender as ObservableCollection<WebProxy>;
-            if (list.Count<1)
+            if (list.Count < 1)
             {
-                while(list.Count<1)
+                while (list.Count < 1)
                 {
                     System.Threading.Thread.Sleep(1000);
                 }
             }
         }
 
-        public static void GetPage(string url)
+        public static string GetPage(string url)
         {
-            foreach (var proxy in ProxyData.GetAvalibleProxy("https://www.leboncoin.fr", File.ReadAllLines("ProxyListEdited.pl")))
-            {
-                while (IsBlocked())
-                {
-                }
-            }
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Proxy = new WebProxy("UsePROOOOOXY", false, null, new NetworkCredential("igp1091139", "1DraM7lfNS"));
+            request.Proxy =  //Proxies.Cut();
             request.CookieContainer = new CookieContainer();
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
             request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
@@ -79,8 +76,6 @@ namespace LeboncoinParcer
             request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
             request.Headers.Add("Cache-Control: no-cache");
             request.Host = "www.leboncoin.fr";
-            //request.Headers.Add("Postman-Token: acbce3eb-50ca-4b26-a043-9bd6cd5a042f");
-
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             string page = "";
@@ -92,6 +87,10 @@ namespace LeboncoinParcer
                     doc.Load(receiveStream);
                     page = doc.Text;
                 }
+            }
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+
             }
             response.Close();
         }
@@ -241,6 +240,91 @@ namespace LeboncoinParcer
                 else
                 {
 
+                }
+            }
+        }
+    }
+    public class CustomWebProxy : WebProxy
+    {
+        public bool IsBanned { get; set; } = false;
+        public CustomWebProxy(bool IsBanned) : base()
+        {
+            this.IsBanned = IsBanned;
+        }
+
+        public CustomWebProxy() : base()
+        {
+        }
+
+        protected CustomWebProxy(SerializationInfo serializationInfo, StreamingContext streamingContext) : base(serializationInfo, streamingContext)
+        {
+        }
+
+        public CustomWebProxy(string Address) : base(Address)
+        {
+        }
+
+        public CustomWebProxy(string Address, bool BypassOnLocal) : base(Address, BypassOnLocal)
+        {
+        }
+
+        public CustomWebProxy(string Address, bool BypassOnLocal, string[] BypassList) : base(Address, BypassOnLocal, BypassList)
+        {
+        }
+
+        public CustomWebProxy(string Address, bool BypassOnLocal, string[] BypassList, ICredentials Credentials) : base(Address, BypassOnLocal, BypassList, Credentials)
+        {
+        }
+
+        public CustomWebProxy(string Host, int Port) : base(Host, Port)
+        {
+        }
+
+        public CustomWebProxy(Uri Address) : base(Address)
+        {
+        }
+
+        public CustomWebProxy(Uri Address, bool BypassOnLocal) : base(Address, BypassOnLocal)
+        {
+        }
+
+        public CustomWebProxy(Uri Address, bool BypassOnLocal, string[] BypassList) : base(Address, BypassOnLocal, BypassList)
+        {
+        }
+
+        public CustomWebProxy(Uri Address, bool BypassOnLocal, string[] BypassList, ICredentials Credentials) : base(Address, BypassOnLocal, BypassList, Credentials)
+        {
+        }
+    }
+    public class ProxyContainer
+    {//TODO CHECK WORK
+        public ObservableCollection<CustomWebProxy> Collections { get; set; }
+        public bool IsAllBaned
+        {
+            get
+            {
+                bool val = !Collections.Any(x => x.IsBanned == false);
+                if (val == true)
+                    Allbaned();
+                return val;
+            }
+        }
+        public delegate void MethodContainer();
+        public event MethodContainer Allbaned;
+        public ProxyContainer(ObservableCollection<CustomWebProxy> proxies)
+        {
+            Collections = proxies;
+            Collections.CollectionChanged += Collections_CollectionChanged;
+        }
+
+        private void Collections_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            var list = sender as ObservableCollection<WebProxy>;
+            if (list.Count < 1)
+            {
+                while (list.Count < 1)
+                {
+                    System.Threading.Thread.Sleep(1000);
                 }
             }
         }
