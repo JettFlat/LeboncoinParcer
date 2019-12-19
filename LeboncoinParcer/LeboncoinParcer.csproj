@@ -4,11 +4,11 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <UseWPF>true</UseWPF>
+        <StartupObject></StartupObject>
     </PropertyGroup>
 
     <ItemGroup>
       <None Remove="blogging.db" />
-      <None Remove="phantomjs.exe" />
       <None Remove="ProxyListEdited.pl" />
     </ItemGroup>
 
@@ -23,9 +23,6 @@
 
     <ItemGroup>
       <Content Include="blogging.db">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Include="phantomjs.exe">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Content Include="ProxyListEdited.pl">

@@ -18,42 +18,33 @@ namespace LeboncoinParcer
     {
         public static void Testing()
         {
-            var list = Parser.ParseRealtyUrl(File.ReadAllText(@"D:\WORK\Backup\pages\93.html"));
-            string rt = "https://www.leboncoin.fr/locations/1724535725.htm/";
-            rt = System.Text.RegularExpressions.Regex.Replace(rt, @"[^\d]+", "");
-            //using (var context = new SQLiteDBContext())
-            //{
-            //    context.Realtys.Add(new Realty { Id = 2344, Date = DateTime.Now });
-            //    //var test = context.Realtys;
-            //    context.SaveChanges();
-            //}
         }
     }
     class Parser
     {
+        public static int Timespan = 4000;
         public static object clocker = new object();
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
             BinaryFormatter formatter = new BinaryFormatter();
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            //var linkpages = GetAllPages();
+            var linkpages = GetAllPages();
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    formatter.Serialize(fs, linkpages);
             //}
-            var linkpages = new List<string> { };
-            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            {
-                linkpages = (List<string>)formatter.Deserialize(fs);
-            }
-            foreach (var o in linkpages)
-                WritePages(ParseRealtyUrl(o));
-            //Parallel.ForEach(linkpages, o => {
+            //var linkpages = new List<string> { };
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    linkpages = (List<string>)formatter.Deserialize(fs);
+            //}
+            //foreach (var o in linkpages)
             //    WritePages(ParseRealtyUrl(o));
-            //});
-            //var list = Parser.ParseRealtyUrl(File.ReadAllText(@"D:\WORK\Backup\pages\93.html"));
-            //WritePages(list);
+            Parallel.ForEach(linkpages, o =>
+            {
+                WritePages(ParseRealtyUrl(o));
+            });
         }
         public static List<string> GetAllPages()
         {
@@ -65,7 +56,7 @@ namespace LeboncoinParcer
             {
                 string page = null;
                 while (page == null)
-                    page = GetPage(url + path);
+                    page = GetPage(url + path, Timespan);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
                 path = Parse(page);
                 count++;
@@ -100,7 +91,7 @@ namespace LeboncoinParcer
             {
                 string page = null;
                 while (page == null)
-                    page = GetPage(o,4000);
+                    page = GetPage(o, Timespan);
                 if (page == "skip")
                     return;
                 File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", page);
