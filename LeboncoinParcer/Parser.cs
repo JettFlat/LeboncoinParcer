@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using SQLiteAspNetCoreDemo;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 
 namespace LeboncoinParcer
 {
@@ -34,17 +35,18 @@ namespace LeboncoinParcer
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
-            ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            var linkpages = GetAllPages();
             BinaryFormatter formatter = new BinaryFormatter();
-            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            {
-                formatter.Serialize(fs, linkpages);
-            }
+            ProxyContainer.Allbaned += ProxyContainer_Allbaned;
+            //var linkpages = GetAllPages();
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
-            //    List<string> deserilize = (List<string>)formatter.Deserialize(fs);
+            //    formatter.Serialize(fs, linkpages);
             //}
+            var linkpages = new List<string> { };
+            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            {
+                linkpages = (List<string>)formatter.Deserialize(fs);
+            }
             foreach (var o in linkpages)
                 WritePages(ParseRealtyUrl(o));
             //Parallel.ForEach(linkpages, o => {
@@ -87,7 +89,7 @@ namespace LeboncoinParcer
             List<string> results = new List<string> { };
             Parallel.ForEach(UrlContainer, o =>
             {
-                results.Add(GetPage(o));
+                results.Add(GetPage(o));//TODO НЕВЕРНО, Добавить getpage может вернуть null
             });
             return results;
         }
@@ -96,7 +98,12 @@ namespace LeboncoinParcer
             new DirectoryInfo(path).Create();
             Parallel.ForEach(UrlContainer, o =>
             {
-                File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", GetPage(o));
+                string page = null;
+                while (page == null)
+                    page = GetPage(o,4000);
+                if (page == "skip")
+                    return;
+                File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", page);
             });
         }
 
@@ -111,10 +118,20 @@ namespace LeboncoinParcer
                 System.Threading.Thread.Sleep(Sleepms);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             var p = new CustomWebProxy();
-            lock (clocker)
+            bool wait = true;
+            while (wait)
             {
-                p = ProxyContainer.Collections.Cut();
-                request.Proxy = p;
+                lock (clocker)
+                {
+                    if (ProxyContainer.Collections.Count > 0)
+                    {
+                        p = ProxyContainer.Collections.Cut();
+                        request.Proxy = p;
+                        wait = false;
+                        break;
+                    }
+                }
+                Thread.Sleep(1000);
             }
             request.CookieContainer = new CookieContainer();
             request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
@@ -129,11 +146,15 @@ namespace LeboncoinParcer
             {
                 response = (HttpWebResponse)request.GetResponse();
             }
-            catch (Exception)
+            catch (Exception exc)
             {
-                p.IsBanned = true;
                 lock (clocker)
                     ProxyContainer.Collections.Add(p);
+                if (exc.Message== "The remote server returned an error: (410) Gone.")
+                {
+                    return "skip";
+                }
+                p.IsBanned = true;
                 return null;
             }
             lock (clocker)
@@ -454,9 +475,9 @@ namespace LeboncoinParcer
             if (list.Count == StartCount)
                 if (!list.Any(x => x.IsBanned == false))
                     Allbaned();
-            if (list.Count < 1)
-                while (list.Count < 1)
-                    System.Threading.Thread.Sleep(1000);
+            //if (list.Count < 1)
+            //    while (list.Count < 1)
+            //        System.Threading.Thread.Sleep(1000);
         }
     }
 
