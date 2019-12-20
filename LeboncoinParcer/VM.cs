@@ -40,10 +40,20 @@ namespace LeboncoinParser
         }
         public RelayCommand Start => new RelayCommand(o =>
         {
+            DataBase.DBUpdated += DataBase_DBUpdated;
             Visible = false;
             Task.Run(() => Parser.Start());
         });
-        ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(SQLiteDBContext.Get(10000));
+        public RelayCommand Test => new RelayCommand(o =>
+        {
+        });
+
+        private void DataBase_DBUpdated()
+        {
+            Realties= new ObservableCollection<Realty>(DataBase.Get());
+        }
+
+        ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(DataBase.Get());
         public ObservableCollection<Realty> Realties
         {
             get => _Realties;

@@ -12,6 +12,21 @@ namespace SQLiteAspNetCoreDemo
         public DbSet<Realty> Realtys { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=blogging.db");
+        
+        
+    }
+    public class DataBase
+    {
+        public delegate void MethodContainer();
+        public static event MethodContainer DBUpdated;
+        public static List<Realty> Get()
+        {
+            using (var context = new SQLiteDBContext())
+            {
+                var res = context.Realtys.ToList();
+                return res;
+            }
+        }
         public static void AddToDb(Dictionary<string, string> dictionary)
         {
             using (var context = new SQLiteDBContext())
@@ -38,67 +53,50 @@ namespace SQLiteAspNetCoreDemo
                         while (page == null)
                             page = Parser.GetPage(o.Url, Parser.Timespan);
                         var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-                        var test = Parser.ParseRealty(o, page);
-                        item.Update(test);
+                        var parsed = Parser.ParseRealty(o, page);
+                        item.Update(parsed);
+                        if (string.IsNullOrWhiteSpace(item.Phone))
+                            context.Realtys.Remove(item);
                         context.SaveChanges();
+                        DBUpdated();
                     }
                 }
-                catch(Exception)
+                catch (Exception)
                 {
 
                 }
-               
-            }
 
-            //using (var context = new SQLiteDBContext())
-            //{//TODO добавить поитерационное сохранение в бд
-            //    foreach (var o in context.Realtys)
-            //    {
-            //        string page = null;
-            //        while (page == null)
-            //            page = Parser.GetPage(o.Url, Parser.Timespan);
-            //        try
-            //        {
-            //            var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-            //            var test = Parser.ParseRealty(o, page);
-            //            item.Update(test);
-            //        }
-            //        catch (Exception)
-            //        {
-
-            //        }
-            //    }
-            //    context.SaveChanges();
-            //}
-        }
-        public static List<Realty> Get(int maxcount)
-        {
-            using (var context = new SQLiteDBContext())
-            {
-                var res = context.Realtys.Take(maxcount).ToList();
-                return res;
             }
         }
-        public static List<Realty> Get()
-        {
-            using (var context = new SQLiteDBContext())
-            {
-                var res = context.Realtys.ToList();
-                return res;
-            }
-        }
-        //public static void Update(Realty realty)
+        //public static void ParseAd()
         //{
+        //    List<Realty> list = new List<Realty> { };
         //    using (var context = new SQLiteDBContext())
         //    {
-        //            context.Realtys.Remove(new Realty());
-        //        context.SaveChanges();
+        //        list = context.Realtys.ToList();
+        //    }
+        //    foreach (var o in list)
+        //    {
+        //        try
+        //        {
+        //            using (var context = new SQLiteDBContext())
+        //            {
+        //                string page = null;
+        //                while (page == null)
+        //                    page = Parser.GetPage(o.Url, Parser.Timespan);
+        //                var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
+        //                var parsed = Parser.ParseRealty(o, page);
+        //                item.Update(parsed);
+        //                context.SaveChanges();
+        //                DBUpdated();
+        //            }
+        //        }
+        //        catch (Exception)
+        //        {
+
+        //        }
+
         //    }
         //}
-    }
-    public class DataBase
-    {
-        public delegate void MethodContainer();
-        public event MethodContainer Allbaned;
     }
 }
