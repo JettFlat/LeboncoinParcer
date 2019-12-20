@@ -22,9 +22,10 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
                 </Border.Effect>
-                <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
+                <DataGrid ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn  Header="Name" Binding="{Binding Name}"/>
+                        <DataGridTextColumn MaxWidth="200" Header="Name" Binding="{Binding Name}">
+                        </DataGridTextColumn>
                         <DataGridTextColumn  Header="Date" Binding="{Binding Date}"/>
                         <DataGridTextColumn  Header="Phone" Binding="{Binding Phone}"/>
                         <DataGridTextColumn  Header="Location" Binding="{Binding LocalisationTown}"/>

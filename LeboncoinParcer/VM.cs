@@ -43,7 +43,7 @@ namespace LeboncoinParser
             Visible = false;
             Task.Run(() => Parser.Start());
         });
-        ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(SQLiteDBContext.Get(20));
+        ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(SQLiteDBContext.Get(10000));
         public ObservableCollection<Realty> Realties
         {
             get => _Realties;

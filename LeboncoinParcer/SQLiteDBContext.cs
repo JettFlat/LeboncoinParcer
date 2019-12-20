@@ -23,49 +23,67 @@ namespace SQLiteAspNetCoreDemo
         }
         public static void ParseAd()
         {
-            //List<Realty> list = new List<Realty> { };
+            List<Realty> list = new List<Realty> { };
+            using (var context = new SQLiteDBContext())
+            {
+                list = context.Realtys.ToList();
+            }
+            foreach (var o in list)
+            {
+                try
+                {
+                    using (var context = new SQLiteDBContext())
+                    {
+                        string page = null;
+                        while (page == null)
+                            page = Parser.GetPage(o.Url, Parser.Timespan);
+                        var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
+                        var test = Parser.ParseRealty(o, page);
+                        item.Update(test);
+                        context.SaveChanges();
+                    }
+                }
+                catch(Exception)
+                {
+
+                }
+               
+            }
+
             //using (var context = new SQLiteDBContext())
-            //{
-            //    list = context.Realtys.ToList();
-            //}
-            //int count = 0;
-            //foreach (var o in list)
-            //{
-            //    while (count < 5)
+            //{//TODO добавить поитерационное сохранение в бд
+            //    foreach (var o in context.Realtys)
             //    {
-            //        using (var context = new SQLiteDBContext())
+            //        string page = null;
+            //        while (page == null)
+            //            page = Parser.GetPage(o.Url, Parser.Timespan);
+            //        try
+            //        {
+            //            var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
+            //            var test = Parser.ParseRealty(o, page);
+            //            item.Update(test);
+            //        }
+            //        catch (Exception)
             //        {
 
             //        }
             //    }
+            //    context.SaveChanges();
             //}
-
-            using (var context = new SQLiteDBContext())
-            {//TODO добавить поитерационное сохранение в бд
-                foreach (var o in context.Realtys)
-                {
-                    string page = null;
-                    while (page == null)
-                        page = Parser.GetPage(o.Url, Parser.Timespan);
-                    try
-                    {
-                        var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-                        var test = Parser.ParseRealty(o, page);
-                        item.Update(test);
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-                context.SaveChanges();
-            }
         }
         public static List<Realty> Get(int maxcount)
         {
             using (var context = new SQLiteDBContext())
             {
                 var res = context.Realtys.Take(maxcount).ToList();
+                return res;
+            }
+        }
+        public static List<Realty> Get()
+        {
+            using (var context = new SQLiteDBContext())
+            {
+                var res = context.Realtys.ToList();
                 return res;
             }
         }
@@ -77,5 +95,10 @@ namespace SQLiteAspNetCoreDemo
         //        context.SaveChanges();
         //    }
         //}
+    }
+    public class DataBase
+    {
+        public delegate void MethodContainer();
+        public event MethodContainer Allbaned;
     }
 }
