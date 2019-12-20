@@ -41,7 +41,7 @@ namespace SQLiteAspNetCoreDemo
             //}
 
             using (var context = new SQLiteDBContext())
-            {
+            {//TODO добавить поитерационное сохранение в бд
                 foreach (var o in context.Realtys)
                 {
                     string page = null;

@@ -28,26 +28,26 @@ namespace LeboncoinParcer
         public static void Start()
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            //var linkpages = GetAllPages();
+            var linkpages = GetAllPages();
             //List<string> linkpages = new List<string> { };
             //BinaryFormatter formatter = new BinaryFormatter();
-            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            ////{
-            ////    formatter.Serialize(fs, linkpages);
-            ////}
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    formatter.Serialize(fs, linkpages);
+            //}
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    linkpages = (List<string>)formatter.Deserialize(fs);
             //}
-            //List<string> RealtysUrls = new List<string> { };
-            //foreach (var o in linkpages)
-            //{
-            //    var items = (ParseRealtyUrl(o));
-            //    RealtysUrls.AddRange(items);
-            //}
-            //var d = GetDic(RealtysUrls);
-            //SQLiteDBContext.AddToDb(d);
-            //SQLiteDBContext.ParseAd();
+            List<string> RealtysUrls = new List<string> { };
+            foreach (var o in linkpages)
+            {
+                var items = ParseRealtyUrl(o);
+                RealtysUrls.AddRange(items);
+            }
+            var d = GetDic(RealtysUrls);
+            SQLiteDBContext.AddToDb(d);
+            SQLiteDBContext.ParseAd();
         }
         public static Realty ParseRealty(Realty R, string html)
         {//TODO улучшить
