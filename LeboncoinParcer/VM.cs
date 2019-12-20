@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,8 +45,9 @@ namespace LeboncoinParser
             Visible = false;
             Task.Run(() => Parser.Start());
         });
-        public RelayCommand Test => new RelayCommand(o =>
+        public RelayCommand Stop => new RelayCommand(o =>
         {
+            Parser.IsRun = false;
         });
 
         private void DataBase_DBUpdated()

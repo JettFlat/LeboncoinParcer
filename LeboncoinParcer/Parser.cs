@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using SQLiteAspNetCoreDemo;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 
 namespace LeboncoinParcer
@@ -22,6 +21,7 @@ namespace LeboncoinParcer
     }
     class Parser
     {
+        public static bool IsRun { get; set; } = true;
         public static int Timespan = 4000;
         public static object clocker = new object();
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
@@ -48,6 +48,7 @@ namespace LeboncoinParcer
             //var d = GetDic(RealtysUrls);
             //DataBase.AddToDb(d);
             DataBase.ParseAd();
+
         }
         public static Realty ParseRealty(Realty R, string html)
         {//TODO улучшить
@@ -112,10 +113,10 @@ namespace LeboncoinParcer
             string url = "https://www.leboncoin.fr";
             string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
             int count = 1;
-            while (path != null)
+            while (path != null && IsRun)
             {
                 string page = null;
-                while (page == null)
+                while (page == null && IsRun)
                     page = GetPage(url + path, Timespan);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
                 path = Parse(page);

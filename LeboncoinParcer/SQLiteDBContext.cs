@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SQLiteAspNetCoreDemo
 {
@@ -12,8 +11,8 @@ namespace SQLiteAspNetCoreDemo
         public DbSet<Realty> Realtys { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=blogging.db");
-        
-        
+
+
     }
     public class DataBase
     {
@@ -65,7 +64,8 @@ namespace SQLiteAspNetCoreDemo
                 {
 
                 }
-
+                if (!Parser.IsRun)
+                    break;
             }
         }
         //public static void ParseAd()

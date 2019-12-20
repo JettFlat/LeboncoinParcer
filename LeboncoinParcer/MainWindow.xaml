@@ -42,8 +42,8 @@
                 <StackPanel >
                     <TextBox Style="{DynamicResource MaterialDesignTextBlox}" Text="{Binding Text}"/>
                     <WrapPanel>
-                        <Button Content="start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
-                        <Button Command="{Binding Test}"/>
+                        <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
+                        <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}"/>
                     </WrapPanel>
                 </StackPanel>
             </materialDesign:Card>
