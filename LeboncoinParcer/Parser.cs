@@ -47,13 +47,7 @@ namespace LeboncoinParcer
             //}
             //var d = GetDic(RealtysUrls);
             //SQLiteDBContext.AddToDb(d);
-            SQLiteDBContext.ParseAd();
-
-
-            //ParseAd(File.ReadAllText(@"D:\WORK\LeboncoinParcer\Test\Adpage2.html"));
-            ////var linkpages = new List<string> { };
-            ////foreach (var o in linkpages)
-            ////    WritePages(ParseRealtyUrl(o));
+            //SQLiteDBContext.ParseAd();
         }
         public static Realty ParseRealty(Realty R, string html)
         {//TODO улучшить
@@ -76,6 +70,7 @@ namespace LeboncoinParcer
                         dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
                         realty.Date = dt;
                     }
+                    realty.Phone = GetPhone(R.Id);
                     realty.Name = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']")?.FirstChild?.FirstChild?.InnerText ?? null;
                     realty.LocalisationTown = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']")?.FirstChild?.InnerText ?? null;
                     realty.Type = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']")?.FirstChild?.LastChild?.InnerText ?? null;
@@ -110,28 +105,6 @@ namespace LeboncoinParcer
 
             }
             return null;
-        }
-        static Realty ParseAd(string html)
-        {//TODO Улучшить
-            var realty = new Realty();
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(html);
-            string date = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_date']").InnerText;//.ParentNode.Attributes.Where(x => x.Name == "href").FirstOrDefault().DeEntitizeValue;
-            date = date.Replace('h', ':');
-            date = date.Replace("à", "");
-            DateTime dt = new DateTime();
-            dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
-            realty.Date = dt;
-            realty.Name = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']").FirstChild.FirstChild.InnerText;
-            realty.LocalisationTown = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']").FirstChild.InnerText;
-            realty.Type = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']").FirstChild.LastChild.InnerText;
-            realty.Rooms = Int32.Parse(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_rooms']").FirstChild.LastChild.InnerText);
-            realty.Surface = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_square']").FirstChild.LastChild.InnerText;
-            realty.Furniture = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_furnished']").FirstChild.LastChild.InnerText;
-            realty.Ges = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_ges']").FirstChild.LastChild.FirstChild.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
-            realty.EnergyClass = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_energy_rate']").FirstChild.LastChild.FirstChild.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
-            realty.Desciption = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_description_container']").FirstChild.InnerText;
-            return realty;
         }
         public static List<string> GetAllPages()
         {
@@ -348,6 +321,72 @@ namespace LeboncoinParcer
                 }
             }
             return st.ToString();
+        }
+        public static string GetPhone(string ID, int Sleepms = 0,string key = "54bb0281238b45a03f0ee695f73e704f")
+        {
+            if (Sleepms > 0)
+                System.Threading.Thread.Sleep(Sleepms);
+            string result = "";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.leboncoin.fr/api/utils/phonenumber.json");
+            var p = new CustomWebProxy();
+            bool wait = true;
+            while (wait)
+            {
+                lock (clocker)
+                {
+                    if (ProxyContainer.Collections.Count > 0)
+                    {
+                        p = ProxyContainer.Collections.Cut();
+                        request.Proxy = p;
+                        wait = false;
+                        break;
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            request.Method = "POST"; // для отправки используется метод Post
+            request.CookieContainer = new CookieContainer();
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+            request.Accept = "application/json";
+            request.Headers.Add("accept-encoding: gzip, deflate, br");
+            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
+            request.Host = "api.leboncoin.fr";
+            request.Headers.Add("Cache-Control: no-cache");
+
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
+            string data = $"app_id=leboncoin_web_utils&key={key}&list_id={ID}&text=1";
+            byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(data);
+            request.ContentLength = byteArray.Length;
+
+            //записываем данные в поток запроса
+            using (Stream dataStream = request.GetRequestStream())
+            {
+                dataStream.Write(byteArray, 0, byteArray.Length);
+            }
+            HttpWebResponse response = new HttpWebResponse();
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (Exception exc)
+            {
+                lock (clocker)
+                    ProxyContainer.Collections.Add(p);
+                if (exc.Message != "The remote server returned an error: (410) Gone.")
+                    p.IsBanned = true;
+                return null;
+            }
+            using (Stream stream = response.GetResponseStream())
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    result = reader.ReadToEnd();
+                    result = System.Text.RegularExpressions.Regex.Replace(result, @"[^\d]+", "");
+                }
+            }
+            response.Close();
+            return null;
         }
     }
     class ProxyData
