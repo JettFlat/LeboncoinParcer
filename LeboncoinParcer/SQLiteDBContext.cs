@@ -23,6 +23,23 @@ namespace SQLiteAspNetCoreDemo
         }
         public static void ParseAd()
         {
+            //List<Realty> list = new List<Realty> { };
+            //using (var context = new SQLiteDBContext())
+            //{
+            //    list = context.Realtys.ToList();
+            //}
+            //int count = 0;
+            //foreach (var o in list)
+            //{
+            //    while (count < 5)
+            //    {
+            //        using (var context = new SQLiteDBContext())
+            //        {
+
+            //        }
+            //    }
+            //}
+
             using (var context = new SQLiteDBContext())
             {
                 foreach (var o in context.Realtys)
