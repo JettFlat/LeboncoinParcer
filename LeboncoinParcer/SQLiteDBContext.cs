@@ -44,6 +44,14 @@ namespace SQLiteAspNetCoreDemo
                 context.SaveChanges();
             }
         }
+        public static List<Realty> Get(int maxcount)
+        {
+            using (var context = new SQLiteDBContext())
+            {
+                var res = context.Realtys.Take(maxcount).ToList();
+                return res;
+            }
+        }
         //public static void Update(Realty realty)
         //{
         //    using (var context = new SQLiteDBContext())

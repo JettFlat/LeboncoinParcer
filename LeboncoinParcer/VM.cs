@@ -1,4 +1,5 @@
 ﻿using LeboncoinParcer;
+using SQLiteAspNetCoreDemo;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -42,5 +43,15 @@ namespace LeboncoinParser
             Visible = false;
             Task.Run(() => Parser.Start());
         });
+        ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(SQLiteDBContext.Get(20));
+        public ObservableCollection<Realty> Realties
+        {
+            get => _Realties;
+            set
+            {
+                _Realties = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

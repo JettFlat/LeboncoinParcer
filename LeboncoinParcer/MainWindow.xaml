@@ -1,18 +1,61 @@
 ﻿<Window x:Class="LeboncoinParser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LeboncoinParser"
         mc:Ignorable="d"
-        Title="LeboncoinParser" SizeToContent="WidthAndHeight">
+     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+     TextElement.FontWeight="Regular"
+     TextElement.FontSize="13"
+     TextOptions.TextFormattingMode="Ideal"
+     TextOptions.TextRenderingMode="Auto"
+     Background="{DynamicResource MaterialDesignPaper}"
+     FontFamily="{DynamicResource MaterialDesignFont}" SizeToContent="WidthAndHeight">
     <Window.DataContext>
         <local:VM/>
     </Window.DataContext>
     <Grid>
         <StackPanel>
-            <TextBox Text="{Binding Text}"/>
-            <Button Content="start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
+            <Border Margin="5 5 5 5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
+                </Border.Effect>
+                <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn  Header="Name" Binding="{Binding Name}"/>
+                        <DataGridTextColumn  Header="Date" Binding="{Binding Date}"/>
+                        <DataGridTextColumn  Header="Phone" Binding="{Binding Phone}"/>
+                        <DataGridTextColumn  Header="Location" Binding="{Binding LocalisationTown}"/>
+                        <DataGridTextColumn  Header="Type" Binding="{Binding Type }"/>
+                        <DataGridTextColumn  Header="Rooms" Binding="{Binding Rooms}"/>
+                        <DataGridTextColumn  Header="Surface" Binding="{Binding Surface}"/>
+                        <DataGridTextColumn  Header="Furniture" Binding="{Binding Furniture}"/>
+                        <DataGridTextColumn  Header="GES" Binding="{Binding Ges}"/>
+                        <DataGridTextColumn  Header="Energy Class" Binding="{Binding EnergyClass}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <materialDesign:Card Margin="5 5 5 5">
+                <StackPanel >
+                    <TextBox Style="{DynamicResource MaterialDesignTextBlox}" Text="{Binding Text}"/>
+                    <Button Content="start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
+                </StackPanel>
+            </materialDesign:Card>
         </StackPanel>
+        <!--<DataGridTextColumn Header="No. Of Days" Width="80" Binding="{Binding NoOfDays}"/>
+        <DataGridTemplateColumn Header="To be Finish Date" Width="110" IsReadOnly="True">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding EarStartDt, StringFormat=dd/MM/yyyy, UpdateSourceTrigger=PropertyChanged}" />
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <DatePicker SelectedDate="{Binding EarStartDt, StringFormat=dd/MM/yyyy, UpdateSourceTrigger=PropertyChanged}" />
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>-->
     </Grid>
 </Window>
