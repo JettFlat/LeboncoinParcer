@@ -27,24 +27,111 @@ namespace LeboncoinParcer
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
-            BinaryFormatter formatter = new BinaryFormatter();
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            var linkpages = GetAllPages();
-            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            //{
-            //    formatter.Serialize(fs, linkpages);
-            //}
-            //var linkpages = new List<string> { };
+            //var linkpages = GetAllPages();
+            //List<string> linkpages = new List<string> { };
+            //BinaryFormatter formatter = new BinaryFormatter();
+            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            ////{
+            ////    formatter.Serialize(fs, linkpages);
+            ////}
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    linkpages = (List<string>)formatter.Deserialize(fs);
             //}
+            //List<string> RealtysUrls = new List<string> { };
             //foreach (var o in linkpages)
-            //    WritePages(ParseRealtyUrl(o));
-            Parallel.ForEach(linkpages, o =>
+            //{
+            //    var items = (ParseRealtyUrl(o));
+            //    RealtysUrls.AddRange(items);
+            //}
+            //var d = GetDic(RealtysUrls);
+            //SQLiteDBContext.AddToDb(d);
+            SQLiteDBContext.ParseAd();
+
+
+            //ParseAd(File.ReadAllText(@"D:\WORK\LeboncoinParcer\Test\Adpage2.html"));
+            ////var linkpages = new List<string> { };
+            ////foreach (var o in linkpages)
+            ////    WritePages(ParseRealtyUrl(o));
+        }
+        public static Realty ParseRealty(Realty R, string html)
+        {//TODO улучшить
+            try
             {
-                WritePages(ParseRealtyUrl(o));
-            });
+                if (!string.IsNullOrWhiteSpace(R.Url) && !string.IsNullOrWhiteSpace(R.Id))
+                {
+                    var realty = new Realty();
+                    realty.Id = R.Id;
+                    realty.Url = R.Url;
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(html);
+                    string date = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_date']")?.InnerText ?? null;
+                    if (date != null)
+                    {
+                        date = date.Replace('h', ':');
+                        date = date.Replace("à", "");
+                        DateTime dt = new DateTime();
+                        //TODO add DataCheck
+                        dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
+                        realty.Date = dt;
+                    }
+                    realty.Name = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']")?.FirstChild?.FirstChild?.InnerText ?? null;
+                    realty.LocalisationTown = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']")?.FirstChild?.InnerText ?? null;
+                    realty.Type = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']")?.FirstChild?.LastChild?.InnerText ?? null;
+                    string RoomText = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_rooms']")?.FirstChild?.LastChild?.InnerText ?? null;
+                    int c;
+                    if (Int32.TryParse(RoomText, out c))
+                        realty.Rooms = c;
+                    realty.Surface = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_square']")?.FirstChild?.LastChild?.InnerText ?? null;
+                    realty.Furniture = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_furnished']")?.FirstChild?.LastChild?.InnerText ?? null;
+                    var ges = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_ges']")?.FirstChild?.LastChild?.FirstChild ?? null;
+                    if (ges != null)
+                    {
+                        if (ges.ChildNodes.Count > 0)
+                            realty.Ges = ges.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
+                        else
+                            realty.Ges = ges.InnerText;
+                    }
+                    var eclass = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_energy_rate']")?.FirstChild?.LastChild?.FirstChild ?? null;
+                    if (eclass != null)
+                    {
+                        if (eclass.ChildNodes.Count > 0)
+                            realty.EnergyClass = eclass.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
+                        else
+                            realty.EnergyClass = eclass.InnerText;
+                    }
+                    realty.Desciption = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_description_container']")?.FirstChild?.InnerText ?? null;
+                    return realty;
+                }
+            }
+            catch (Exception exc)
+            {
+
+            }
+            return null;
+        }
+        static Realty ParseAd(string html)
+        {//TODO Улучшить
+            var realty = new Realty();
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+            string date = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_date']").InnerText;//.ParentNode.Attributes.Where(x => x.Name == "href").FirstOrDefault().DeEntitizeValue;
+            date = date.Replace('h', ':');
+            date = date.Replace("à", "");
+            DateTime dt = new DateTime();
+            dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
+            realty.Date = dt;
+            realty.Name = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']").FirstChild.FirstChild.InnerText;
+            realty.LocalisationTown = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']").FirstChild.InnerText;
+            realty.Type = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']").FirstChild.LastChild.InnerText;
+            realty.Rooms = Int32.Parse(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_rooms']").FirstChild.LastChild.InnerText);
+            realty.Surface = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_square']").FirstChild.LastChild.InnerText;
+            realty.Furniture = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_furnished']").FirstChild.LastChild.InnerText;
+            realty.Ges = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_ges']").FirstChild.LastChild.FirstChild.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
+            realty.EnergyClass = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_energy_rate']").FirstChild.LastChild.FirstChild.ChildNodes.FirstOrDefault(x => x.Attributes.Any(y => y.DeEntitizeValue.Contains("_1sd0z"))).InnerText;
+            realty.Desciption = htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_description_container']").FirstChild.InnerText;
+            return realty;
         }
         public static List<string> GetAllPages()
         {
@@ -75,15 +162,32 @@ namespace LeboncoinParcer
             catch (Exception) { }
             return null;
         }
-        public static List<string> GetPages(List<string> UrlContainer)
+        public static Dictionary<string, string> GetDic(List<string> UrlContainer)
         {
-            List<string> results = new List<string> { };
+            Dictionary<string, string> results = new Dictionary<string, string> { };
+            foreach (var o in UrlContainer)
+            {
+                string key = System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "");
+                if (!results.ContainsKey(key))
+                    results.Add(key, o);
+            }
+            return results;
+        }
+        public static Dictionary<string, string> GetPages(List<string> UrlContainer)
+        {
+            Dictionary<string, string> results = new Dictionary<string, string> { };
             Parallel.ForEach(UrlContainer, o =>
             {
-                results.Add(GetPage(o));//TODO НЕВЕРНО, Добавить getpage может вернуть null
+                string page = null;
+                while (page == null)
+                    page = GetPage(o, Timespan);
+                if (page == "skip")
+                    return;
+                results.Add(System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", ""), page);
             });
             return results;
         }
+
         static void WritePages(List<string> UrlContainer, string path = @"pages/Realty/")
         {
             new DirectoryInfo(path).Create();
@@ -97,7 +201,6 @@ namespace LeboncoinParcer
                 File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", page);
             });
         }
-
         private static void ProxyContainer_Allbaned()
         {
             throw new Exception("All Proxies banned");
@@ -141,7 +244,7 @@ namespace LeboncoinParcer
             {
                 lock (clocker)
                     ProxyContainer.Collections.Add(p);
-                if (exc.Message== "The remote server returned an error: (410) Gone.")
+                if (exc.Message == "The remote server returned an error: (410) Gone.")
                 {
                     return "skip";
                 }
@@ -220,7 +323,7 @@ namespace LeboncoinParcer
             }
             return true;
         }
-        public static string GetCookies(string url)
+        static string GetCookies(string url)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.CookieContainer = new CookieContainer();
