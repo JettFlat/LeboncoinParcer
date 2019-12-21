@@ -11,6 +11,7 @@
      TextElement.FontSize="13"
      TextOptions.TextFormattingMode="Ideal"
      TextOptions.TextRenderingMode="Auto"
+        Title="leboncoin Parser"
      Background="{DynamicResource MaterialDesignPaper}"
      FontFamily="{DynamicResource MaterialDesignFont}" SizeToContent="WidthAndHeight">
     <Window.DataContext>
@@ -39,11 +40,16 @@
                 </DataGrid>
             </Border>
             <materialDesign:Card Margin="5 5 5 5">
-                <StackPanel >
-                    <TextBox Style="{DynamicResource MaterialDesignTextBlox}" Text="{Binding Text}"/>
+                <StackPanel>
+                    <ScrollViewer MaxHeight="100">
+                        <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
+                    </ScrollViewer>
                     <WrapPanel>
                         <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
-                        <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}"/>
+                        <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
+                        <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
+                        <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}"/>
+                        <Button Margin="5 5 5 5" Content="Clear Log" Command="{Binding Clear}"/>
                     </WrapPanel>
                 </StackPanel>
             </materialDesign:Card>

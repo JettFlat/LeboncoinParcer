@@ -24,6 +24,9 @@ namespace LeboncoinParcer
                 return null;
             return items.Cut(items[0]);
         }
-
+        public static string ToLogFormat(this string text)
+        {
+            return $"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}] {text}{Environment.NewLine}";
+        }
     }
 }

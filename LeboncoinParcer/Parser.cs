@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using SQLiteAspNetCoreDemo;
 using System.Threading;
+using LeboncoinParser;
 
 namespace LeboncoinParcer
 {
@@ -19,16 +20,28 @@ namespace LeboncoinParcer
         {
         }
     }
-    class Parser
+    class Parser 
     {
         public static bool IsRun { get; set; } = true;
         public static int Timespan = 4000;
         public static object clocker = new object();
+        public delegate void MethodContainer();
+        public static event MethodContainer LogChanged;
+        static string _log="Start".ToLogFormat();
+        public static string Log
+        {
+            get => _log;
+            set
+            {
+                _log=value;
+                LogChanged();
+            }
+        }
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            //var linkpages = GetAllPages();
+            var linkpages = GetAllPages().ToList();
             ////List<string> linkpages = new List<string> { };
             ////BinaryFormatter formatter = new BinaryFormatter();
             ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
@@ -39,16 +52,15 @@ namespace LeboncoinParcer
             ////{
             ////    linkpages = (List<string>)formatter.Deserialize(fs);
             ////}
-            //List<string> RealtysUrls = new List<string> { };
-            //foreach (var o in linkpages)
-            //{
-            //    var items = ParseRealtyUrl(o);
-            //    RealtysUrls.AddRange(items);
-            //}
-            //var d = GetDic(RealtysUrls);
-            //DataBase.AddToDb(d);
-            DataBase.ParseAd();
-
+            List<string> RealtysUrls = new List<string> { };
+            foreach (var o in linkpages)
+            {
+                var items = ParseRealtyUrl(o);
+                RealtysUrls.AddRange(items);
+            }
+            var d = GetDic(RealtysUrls);
+            DataBase.AddToDb(d);
+            UpdateDBitems();
         }
         public static Realty ParseRealty(Realty R, string html)
         {//TODO улучшить
@@ -107,8 +119,13 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static List<string> GetAllPages()
+        public static void UpdateDBitems()
         {
+            DataBase.ParseAd();
+        }
+        public static IEnumerable<string> GetAllPages()
+        {
+            Log += "Getting ad links from search pages.".ToLogFormat();
             List<string> Parsed = new List<string> { };
             string url = "https://www.leboncoin.fr";
             string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
@@ -119,10 +136,11 @@ namespace LeboncoinParcer
                 while (page == null && IsRun)
                     page = GetPage(url + path, Timespan);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
+                yield return page;
                 path = Parse(page);
+                Log += $"Downloaded page#{count}".ToLogFormat();
                 count++;
             }
-            return Parsed;
         }
         public static List<string> ParseRealtyUrl(string html)
         {

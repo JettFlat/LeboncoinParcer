@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SQLiteAspNetCoreDemo;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -23,6 +24,7 @@ namespace LeboncoinParser
 
         public MainWindow()
         {
+            DataBase.CreateDB();
             InitializeComponent();
             //LeboncoinParcer.Parser.Start();
         }

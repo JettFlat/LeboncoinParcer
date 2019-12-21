@@ -39,20 +39,70 @@ namespace LeboncoinParser
                 OnPropertyChanged();
             }
         }
+        bool _UpVisible;
+        public bool UpVisible
+        {
+            get => _UpVisible;
+            set
+            {
+                _UpVisible = value;
+                OnPropertyChanged();
+            }
+        }
         public RelayCommand Start => new RelayCommand(o =>
         {
-            DataBase.DBUpdated += DataBase_DBUpdated;
-            Visible = false;
-            Task.Run(() => Parser.Start());
+            Parser.IsRun = true;
+            Subscribe();
+             Visible = false;
+            UpVisible = false;
+            Task.Run(() => { Parser.Start();Visible = true; UpVisible = true; });
+
         });
+
+        private void Parser_LogChanged()
+        {
+            Log = Parser.Log;
+        }
+
         public RelayCommand Stop => new RelayCommand(o =>
         {
             Parser.IsRun = false;
         });
-
+        public RelayCommand Export => new RelayCommand(o =>
+        {
+            //ADD your Export method here
+        });
+        public RelayCommand Update => new RelayCommand(o =>
+        {
+            Parser.IsRun = true;
+            Subscribe();
+            Visible = false;
+            UpVisible = false;
+            Task.Run(() => { Parser.UpdateDBitems(); Visible = true; UpVisible = true; });
+            
+        });
+        public RelayCommand Clear => new RelayCommand(o =>
+        {
+            Parser.Log = "";
+        });
+        void Subscribe()
+        {
+            DataBase.DBUpdated += DataBase_DBUpdated;
+            Parser.LogChanged += Parser_LogChanged;
+        }
         private void DataBase_DBUpdated()
         {
             Realties= new ObservableCollection<Realty>(DataBase.Get());
+        }
+        string _Log=Parser.Log;
+        public string Log
+        {
+            get => _Log;
+            set
+            {
+                _Log = value;
+                OnPropertyChanged();
+            }
         }
 
         ObservableCollection<Realty> _Realties =new ObservableCollection<Realty>(DataBase.Get());

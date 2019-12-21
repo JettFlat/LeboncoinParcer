@@ -22,21 +22,29 @@ namespace SQLiteAspNetCoreDemo
         {
             using (var context = new SQLiteDBContext())
             {
-                var res = context.Realtys.ToList();
+                var res = context.Realtys.Where(x => x.Name != null).ToList();
                 return res;
             }
         }
         public static void AddToDb(Dictionary<string, string> dictionary)
         {
-            using (var context = new SQLiteDBContext())
+            if (dictionary.Count > 0)
             {
-                foreach (var item in dictionary)
-                    context.Realtys.Add(new Realty { Id = item.Key, Url = item.Value });
-                context.SaveChanges();
+                using (var context = new SQLiteDBContext())
+                {
+                    foreach (var item in dictionary)
+                    {
+                        if (context.Realtys.Where(x => x.Id == item.Key).ToList().Count < 1)
+                            context.Realtys.Add(new Realty { Id = item.Key, Url = item.Value });
+                    }
+                    context.SaveChanges();
+                }
             }
         }
         public static void ParseAd()
         {
+            //CreateDB();
+            Parser.Log += "Starting parsing/updating all ads.".ToLogFormat();
             List<Realty> list = new List<Realty> { };
             using (var context = new SQLiteDBContext())
             {
@@ -66,6 +74,14 @@ namespace SQLiteAspNetCoreDemo
                 }
                 if (!Parser.IsRun)
                     break;
+            }
+        }
+        public static void CreateDB()
+        {
+            using (var context = new SQLiteDBContext())
+            {
+                context.Database.EnsureCreated();
+                context.SaveChanges();
             }
         }
         //public static void ParseAd()
