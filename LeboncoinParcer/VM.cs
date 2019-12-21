@@ -39,7 +39,7 @@ namespace LeboncoinParser
                 OnPropertyChanged();
             }
         }
-        bool _UpVisible;
+        bool _UpVisible = true;
         public bool UpVisible
         {
             get => _UpVisible;

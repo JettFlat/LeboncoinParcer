@@ -23,7 +23,7 @@ namespace LeboncoinParcer
     class Parser 
     {
         public static bool IsRun { get; set; } = true;
-        public static int Timespan = 4000;
+        public static int Timespan = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).TimeSpan;
         public static object clocker = new object();
         public delegate void MethodContainer();
         public static event MethodContainer LogChanged;
@@ -633,7 +633,10 @@ namespace LeboncoinParcer
             //        System.Threading.Thread.Sleep(1000);
         }
     }
-
+    public class Settings
+    {
+        public int TimeSpan { get; set; }
+    }
 
 
 }

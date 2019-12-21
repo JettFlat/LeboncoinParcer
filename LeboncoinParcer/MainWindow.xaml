@@ -17,6 +17,8 @@
     <Window.DataContext>
         <local:VM/>
     </Window.DataContext>
+    <Window.Resources>
+    </Window.Resources>
     <Grid>
         <StackPanel>
             <Border Margin="5 5 5 5">
@@ -44,7 +46,7 @@
                     <ScrollViewer MaxHeight="100">
                         <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
                     </ScrollViewer>
-                    <WrapPanel>
+                    <WrapPanel HorizontalAlignment="Center">
                         <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
                         <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
                         <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
