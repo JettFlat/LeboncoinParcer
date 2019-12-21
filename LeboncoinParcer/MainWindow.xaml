@@ -25,7 +25,7 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
                 </Border.Effect>
-                <DataGrid ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
+                <DataGrid IsReadOnly="True" ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
                     <DataGrid.Columns>
                         <DataGridTextColumn MaxWidth="200" Header="Name" Binding="{Binding Name}">
                         </DataGridTextColumn>
