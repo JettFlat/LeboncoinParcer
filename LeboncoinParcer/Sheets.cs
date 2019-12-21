@@ -39,67 +39,15 @@ namespace LeboncoinParcer
             });
             String spreadsheetId = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).TableId;
 
-            var sheets = service.Spreadsheets.Get(spreadsheetId).Execute().Sheets;//.FirstOrDefault().Properties.Title;
+            var sheets = service.Spreadsheets.Get(spreadsheetId).Execute().Sheets;
             string sheetName = "Data";
-            //if (sheets.Count < 2)
-            //{
-            //    if (sheets.FirstOrDefault().Properties.Title == sheetName)
-            //    {
-            //        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-            //        batchUpdateSpreadsheetRequest.Requests = new List<Request>();
-            //        var blist = new AddSheetRequest();
-            //        blist.Properties = new SheetProperties();
-            //        blist.Properties.Title = "Baselist";
-            //        blist.Properties.Hidden = false;
-            //        batchUpdateSpreadsheetRequest.Requests = new List<Request> { new Request { AddSheet = blist } };
-            //        var blistADD = service.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
-            //        blistADD.Execute();
-            //    }
-            //    if (sheets.FirstOrDefault().Properties.Title == "Baselist")
-            //    {
-            //        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-            //        batchUpdateSpreadsheetRequest.Requests = new List<Request>();
-            //        var blist = new UpdateSheetPropertiesRequest();
-            //        blist.Properties = new SheetProperties();
-            //        blist.Properties.Hidden = false;
-            //        batchUpdateSpreadsheetRequest.Requests = new List<Request> { new Request { UpdateSheetProperties = blist } };
-            //        var blistADD = service.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadsheetId);
-            //        blistADD.Execute();
-            //        //hide false
-            //    }
-            //}
-            //var sheet = sheets.FirstOrDefault(x => x.Properties.Title == sheetName);
-            //if (sheet != null)
-            //{
-            //    BatchUpdateSpreadsheetRequest req = new BatchUpdateSpreadsheetRequest();
-            //    req.Requests = new List<Request>();
-            //    var deletesheetreq = new DeleteSheetRequest();
-            //    deletesheetreq.SheetId = sheet.Properties.SheetId;
-            //    req.Requests.Add(new Request
-            //    {
-            //        DeleteSheet = deletesheetreq
-            //    });
-            //    var Remove = service.Spreadsheets.BatchUpdate(req, spreadsheetId);
-            //    Remove.Execute();
-
-            //}
-            //BatchUpdateSpreadsheetRequest addreq = new BatchUpdateSpreadsheetRequest();
-            //addreq.Requests = new List<Request>();
-            //var addSheetRequest = new AddSheetRequest();
-            //addSheetRequest.Properties = new SheetProperties();
-            //addSheetRequest.Properties.Title = sheetName;
-            //addreq.Requests = new List<Request> { new Request { AddSheet = addSheetRequest } };
-            //var ADD = service.Spreadsheets.BatchUpdate(addreq, spreadsheetId);
-            //ADD.Execute();
-
             string range = $"{sheetName}!A:J";
 
-            var clearreq = new ClearValuesRequest();
-            var test = service.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, range).Execute();
-
-
-
-
+            if (sheets.Any(x => x.Properties.Title == sheetName))
+            {
+                var clearreq = new ClearValuesRequest();
+                var test = service.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, range).Execute();
+            }
             var valueRange = new ValueRange();
             valueRange.Values = new List<IList<object>> { };
             valueRange.Values.Add(new List<object> { "Name", "Date", "Phone", "Location", "Type", "Rooms", "Surface", "Furniture", "Ges", "Energy class" });
