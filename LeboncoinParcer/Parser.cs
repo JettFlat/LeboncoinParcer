@@ -42,6 +42,7 @@ namespace LeboncoinParcer
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
+            #region Tests
             ////List<string> linkpages = new List<string> { };
             ////BinaryFormatter formatter = new BinaryFormatter();
             ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
@@ -52,6 +53,7 @@ namespace LeboncoinParcer
             ////{
             ////    linkpages = (List<string>)formatter.Deserialize(fs);
             ////}
+            #endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
             {
@@ -63,7 +65,7 @@ namespace LeboncoinParcer
             UpdateDBitems();
         }
         public static Realty ParseRealty(Realty R, string html)
-        {//TODO улучшить
+        {
             try
             {
                 if (!string.IsNullOrWhiteSpace(R.Url) && !string.IsNullOrWhiteSpace(R.Id))
@@ -79,7 +81,6 @@ namespace LeboncoinParcer
                         date = date.Replace('h', ':');
                         date = date.Replace("à", "");
                         DateTime dt = new DateTime();
-                        //TODO add DataCheck
                         dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
                         realty.Date = dt;
                     }
@@ -257,7 +258,7 @@ namespace LeboncoinParcer
                 }
             }
             if (response.StatusCode == HttpStatusCode.Forbidden)
-                p.IsBanned = true;//TODO check Proxycontainer ban values
+                p.IsBanned = true;
             response.Close();
             return null;
         }
@@ -309,7 +310,7 @@ namespace LeboncoinParcer
                     var htmlDoc = new HtmlDocument();
                     htmlDoc.LoadHtml(page);
                     var node = htmlDoc.DocumentNode.SelectSingleNode("//head/title");
-                    if (node.OuterHtml != @"<title>You have been blocked</title>")//TODO Check
+                    if (node.OuterHtml != @"<title>You have been blocked</title>")
                         return false;
                 }
             }
@@ -493,7 +494,7 @@ namespace LeboncoinParcer
                         Proxs.Add(new ProxyData { Adress = o });
                     return;
                 }
-                string[] array = o.Split('#');//TODO проверить если нет юзера и пароля
+                string[] array = o.Split('#');
                 if (array.Length > 2)
                     lock (locker)
                         Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
@@ -526,7 +527,7 @@ namespace LeboncoinParcer
                         Proxs.Add(new ProxyData { Adress = o });
                     return;
                 }
-                string[] array = o.Split('#');//TODO проверить если нет юзера и пароля
+                string[] array = o.Split('#');
                 if (array.Length > 2)
                     lock (locker)
                         Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
@@ -610,7 +611,7 @@ namespace LeboncoinParcer
         }
     }
     public class ProxyContainer
-    {//TODO CHECK WORK
+    {
         public ObservableCollection<CustomWebProxy> Collections { get; set; }
         public int StartCount { get; }
         //public object locker { get; } = new object();
@@ -623,14 +624,11 @@ namespace LeboncoinParcer
             Collections.CollectionChanged += Collections_CollectionChanged;
         }
         private void Collections_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {//TODO Use locker?
+        {
             var list = sender as ObservableCollection<CustomWebProxy>;
             if (list.Count == StartCount)
                 if (!list.Any(x => x.IsBanned == false))
                     Allbaned();
-            //if (list.Count < 1)
-            //    while (list.Count < 1)
-            //        System.Threading.Thread.Sleep(1000);
         }
     }
     public class Settings
