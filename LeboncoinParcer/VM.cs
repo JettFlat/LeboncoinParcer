@@ -49,6 +49,125 @@ namespace LeboncoinParser
                 OnPropertyChanged();
             }
         }
+
+        #region Filters
+        //string _NameFilter="";
+        //public string NameFilter
+        //{
+        //    get => _NameFilter;
+        //    set
+        //  {
+        //        _NameFilter = value;
+        //        if(!string.IsNullOrWhiteSpace(_NameFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>( Realties.Where(x => x.Name.Contains(_NameFilter)).ToList());
+        //            var MyView = CollectionViewSource.GetDefaultView(Realties);
+        //            MyView.
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _PhoneFilter = "";
+        //public string PhoneFilter
+        //{
+        //    get => _PhoneFilter;
+        //    set
+        //    {
+        //        _PhoneFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_PhoneFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_PhoneFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _LocationFilter = "";
+        //public string LocationFilter
+        //{
+        //    get => _LocationFilter;
+        //    set
+        //    {
+        //        _LocationFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_LocationFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_LocationFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _TypeFilter = "";
+        //public string TypeFilter
+        //{
+        //    get => _TypeFilter;
+        //    set
+        //    {
+        //        _TypeFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_TypeFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_TypeFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _SurfaceFilter = "";
+        //public string SurfaceFilter
+        //{
+        //    get => _SurfaceFilter;
+        //    set
+        //    {
+        //        _SurfaceFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_SurfaceFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_SurfaceFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _FurnitureFilter = "";
+        //public string FurnitureFilter
+        //{
+        //    get => _FurnitureFilter;
+        //    set
+        //    {
+        //        _FurnitureFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_FurnitureFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_FurnitureFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _GesFilter = "";
+        //public string GesFilter
+        //{
+        //    get => _GesFilter;
+        //    set
+        //    {
+        //        _GesFilter = value;
+        //        if (!string.IsNullOrWhiteSpace(_GesFilter))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_GesFilter)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+        //string _EnergyClass = "";
+        //public string EnergyClass
+        //{
+        //    get => _EnergyClass;
+        //    set
+        //    {
+        //        _EnergyClass = value;
+        //        if (!string.IsNullOrWhiteSpace(_EnergyClass))
+        //        {
+        //            Realties = new ObservableCollection<Realty>(Realties.Where(x => x.Name.Contains(_EnergyClass)).ToList());
+        //        }
+        //        OnPropertyChanged();
+        //    }
+        //}
+
+        #endregion
+
         public RelayCommand Start => new RelayCommand(o =>
         {
             Parser.IsRun = true;
