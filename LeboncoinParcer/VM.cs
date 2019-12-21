@@ -70,7 +70,7 @@ namespace LeboncoinParser
         });
         public RelayCommand Export => new RelayCommand(o =>
         {
-            //ADD your Export method here
+            Parser.Export();
         });
         public RelayCommand Update => new RelayCommand(o =>
         {

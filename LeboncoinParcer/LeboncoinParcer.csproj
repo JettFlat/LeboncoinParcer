@@ -10,7 +10,6 @@
     <ItemGroup>
       <None Remove="blogging.db" />
       <None Remove="ProxyListEdited.pl" />
-      <None Remove="Settings.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,12 +28,10 @@
       <Content Include="ProxyListEdited.pl">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <Content Include="Settings.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Google.Apis.Sheets.v4" Version="1.42.0.1791" />
       <PackageReference Include="HtmlAgilityPack" Version="1.11.17" />
       <PackageReference Include="MaterialDesignThemes" Version="3.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
@@ -45,6 +42,15 @@
       </PackageReference>
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
       <PackageReference Include="Selenium.WebDriver" Version="3.13.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="credentials.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Settings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

@@ -24,6 +24,7 @@ namespace LeboncoinParser
 
         public MainWindow()
         {
+            
             DataBase.CreateDB();
             InitializeComponent();
             //LeboncoinParcer.Parser.Start();

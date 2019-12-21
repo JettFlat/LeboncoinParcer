@@ -14,32 +14,31 @@ using LeboncoinParser;
 
 namespace LeboncoinParcer
 {
-    public class Test
-    {
-        public static void Testing()
-        {
-        }
-    }
-    class Parser 
+    class Parser
     {
         public static bool IsRun { get; set; } = true;
         public static int Timespan = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).TimeSpan;
         public static object clocker = new object();
         public delegate void MethodContainer();
         public static event MethodContainer LogChanged;
-        static string _log="Start".ToLogFormat();
+        static string _log = "Start".ToLogFormat();
         public static string Log
         {
             get => _log;
             set
             {
-                _log=value;
+                _log = value;
                 LogChanged();
             }
         }
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
         public static void Start()
         {
+            //var tewst = new Settings { TimeSpan = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
+            //File.WriteAllText("Settings.json",Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
+            
+
+
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
             #region Tests
@@ -63,6 +62,10 @@ namespace LeboncoinParcer
             var d = GetDic(RealtysUrls);
             DataBase.AddToDb(d);
             UpdateDBitems();
+        }
+        public static void Export()
+        {
+            LeboncoinParcer.Sheets.Export(DataBase.Get());
         }
         public static Realty ParseRealty(Realty R, string html)
         {
@@ -634,6 +637,7 @@ namespace LeboncoinParcer
     public class Settings
     {
         public int TimeSpan { get; set; }
+        public string TableId { get; set; }
     }
 
 
