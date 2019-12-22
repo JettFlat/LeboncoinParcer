@@ -62,7 +62,7 @@ namespace LeboncoinParcer
             var valueRange = new ValueRange();
             valueRange.Values = new List<IList<object>> { };
             valueRange.Values.Add(new List<object> { "Name", "Date", "Phone", "Location", "Type", "Rooms", "Surface", "Furniture", "Ges", "Energy class" ,"Status"});
-            var rows = list.Select(x => new List<object>() { x.Name, x.Date, x.Phone, x.LocalisationTown, x.Type, x.Rooms, x.Surface, x.Furniture, x.Ges, x.EnergyClass ,x.Status}).ToList();
+            var rows = list.Select(x => new List<object>() { x.Name, x.Date.ToString("dd/MM/yyyy HH:mm:ss"), x.Phone, x.LocalisationTown, x.Type, x.Rooms, x.Surface, x.Furniture, x.Ges, x.EnergyClass ,x.Status}).ToList();
             foreach (var myvalue in rows)
                 valueRange.Values.Add(myvalue);
             var appendRequest = service.Spreadsheets.Values.Append(valueRange, spreadsheetId, range);

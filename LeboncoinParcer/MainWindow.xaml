@@ -18,6 +18,7 @@
         <local:VM/>
     </Window.DataContext>
     <Window.Resources>
+        <CollectionViewSource x:Key="RealtiesCollection" Source="{Binding Realties}"/>
     </Window.Resources>
     <Grid>
         <ScrollViewer>
@@ -25,26 +26,35 @@
                 <Border Margin="5 5 5 5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
-                    </Border.Effect>    
-                    <DataGrid IsReadOnly="True" ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
+                    </Border.Effect>
+                    <DataGrid ItemsSource="{Binding MovieView}" IsReadOnly="True" ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn MaxWidth="200" Header="Name" Binding="{Binding Name}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding}"/>
-                                            <!--<TextBox Text="{Binding DataContext.NameFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>-->
+                                            <TextBox Text="{Binding DataContext.NameFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
-                            <DataGridTextColumn  Header="Date" Binding="{Binding Date}"/>
+                            <DataGridTextColumn  Header="Date" Binding="{Binding Date}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.DateFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
                             <DataGridTextColumn  Header="Phone" Binding="{Binding Phone}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding}"/>
-                                            <!--<TextBox Text="{Binding DataContext.PhoneFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>-->
+                                            <TextBox Text="{Binding DataContext.PhoneFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
@@ -54,27 +64,81 @@
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding}"/>
-                                            <!--<TextBox Text="{Binding DataContext.LocationFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>-->
+                                            <TextBox Text="{Binding DataContext.LocationFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
-                            <DataGridTextColumn  Header="Type" Binding="{Binding Type }">
+                            <DataGridTextColumn  Header="Type" Binding="{Binding Type}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding}"/>
-                                            <!--<TextBox Text="{Binding DataContext.TypeFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>-->
+                                            <TextBox Text="{Binding DataContext.TypeFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
-                            <DataGridTextColumn  Header="Rooms" Binding="{Binding Rooms}"/>
-                            <DataGridTextColumn  Header="Surface" Binding="{Binding Surface}"/>
-                            <DataGridTextColumn  Header="Furniture" Binding="{Binding Furniture}"/>
-                            <DataGridTextColumn  Header="GES" Binding="{Binding Ges}"/>
-                            <DataGridTextColumn  Header="Energy Class" Binding="{Binding EnergyClass}"/>
-                            <DataGridTextColumn  Header="Status" Binding="{Binding Status}"/>
+                            <DataGridTextColumn  Header="Rooms" Binding="{Binding Rooms}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.RoomsFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn  Header="Surface" Binding="{Binding Surface}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.SurfaceFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn  Header="Furniture" Binding="{Binding Furniture}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.FurnitureFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn  Header="GES" Binding="{Binding Ges}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.GesFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn  Header="Energy Class" Binding="{Binding EnergyClass}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.EnergyClassFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn  Header="Status" Binding="{Binding Status}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.StatusFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
