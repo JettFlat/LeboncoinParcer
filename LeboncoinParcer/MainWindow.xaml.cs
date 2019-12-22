@@ -1,4 +1,5 @@
-﻿using SQLiteAspNetCoreDemo;
+﻿using LeboncoinParcer;
+using SQLiteAspNetCoreDemo;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,19 +16,18 @@ namespace LeboncoinParser
 {
     public partial class MainWindow : Window
     {
-        //public VM VM { get; set; }
-
-        //public MainWindow(VM vm)
-        //{
-        //    InitializeComponent();
-        //}
-
+        public static object Locker { get; } = new object();
         public MainWindow()
         {
-            
-            DataBase.CreateDB();
-            InitializeComponent();
-            //LeboncoinParcer.Parser.Start();
+            try
+            {
+                DataBase.CreateDB();
+                InitializeComponent();
+            }
+            catch (Exception exc)
+            {
+                exc.Write(Locker);
+            }
         }
     }
 }

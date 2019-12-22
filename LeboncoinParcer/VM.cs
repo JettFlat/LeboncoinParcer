@@ -181,11 +181,18 @@ namespace LeboncoinParser
 
         public RelayCommand Start => new RelayCommand(o =>
         {
-            Parser.IsRun = true;
-            Subscribe();
-            Visible = false;
-            UpVisible = false;
-            Task.Run(() => { Parser.Start(); Visible = true; UpVisible = true; });
+            try
+            {
+                Parser.IsRun = true;
+                Subscribe();
+                Visible = false;
+                UpVisible = false;
+                Task.Run(() => { Parser.Start(); Visible = true; UpVisible = true; });
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
 
         });
 
@@ -196,25 +203,53 @@ namespace LeboncoinParser
 
         public RelayCommand Stop => new RelayCommand(o =>
         {
-            Parser.IsRun = false;
+            try
+            {
+                Parser.IsRun = false;
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
+
         });
         public RelayCommand Export => new RelayCommand(o =>
         {
-            ExportEnable = false;
-            Task.Run(() => Parser.Export()); ExportEnable = true; ;
+            try
+            {
+                ExportEnable = false;
+                Task.Run(() => Parser.Export()); ExportEnable = true; ;
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
         });
         public RelayCommand Update => new RelayCommand(o =>
         {
-            Parser.IsRun = true;
-            Subscribe();
-            Visible = false;
-            UpVisible = false;
-            Task.Run(() => { Parser.UpdateDBitems(); Visible = true; UpVisible = true; });
-
+            try
+            {
+                Parser.IsRun = true;
+                Subscribe();
+                Visible = false;
+                UpVisible = false;
+                Task.Run(() => { Parser.UpdateDBitems(); Visible = true; UpVisible = true; });
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
         });
         public RelayCommand Clear => new RelayCommand(o =>
         {
+            try
+            {
             Parser.Log = "";
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
         });
         void Subscribe()
         {

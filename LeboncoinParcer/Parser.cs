@@ -29,7 +29,7 @@ namespace LeboncoinParcer
             set
             {
                 _log = value;
-                LogChanged();
+                LogChanged();//TODO REPAIR
             }
         }
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
