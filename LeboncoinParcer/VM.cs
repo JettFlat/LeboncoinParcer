@@ -193,7 +193,27 @@ namespace LeboncoinParser
                 UpdateDataGrid();
             }
         }
-        public CollectionView MovieView { get; private set; }
+        string _UrlFilter = "";
+        public string UrlFilter
+        {
+            get => _UrlFilter;
+            set
+            {
+                _UrlFilter = value;
+                OnPropertyChanged();
+                UpdateDataGrid();
+            }
+        }
+        CollectionView _MovieView;
+        public CollectionView MovieView
+        {
+            get => _MovieView;
+            set
+            {
+                _MovieView = value;
+                OnPropertyChanged();
+            }
+        }
         public CollectionView GetMovieCollectionView(ObservableCollection<Realty> movList)
         {
             return (CollectionView)CollectionViewSource.GetDefaultView(movList);
@@ -207,7 +227,8 @@ namespace LeboncoinParser
                 if (t.Phone.Contains(PhoneFilter) && t.Name.Contains(NameFilter) && t.LocalisationTown.Contains(LocationFilter) &&
                     t.Type.Contains(TypeFilter) && t.Surface.Contains(SurfaceFilter) && t.Furniture.Contains(FurnitureFilter) &&
                     t.Ges.Contains(GesFilter) && t.EnergyClass.Contains(EnergyClassFilter) && t.Status.Contains(StatusFilter) &&
-                    t.Rooms.ToString().Contains(RoomsFilter) && t.Date.ToString("MM/dd/yyyy h:mm tt").Contains(DateFilter))
+                    t.Rooms.ToString().Contains(RoomsFilter) && t.Date.ToString("MM/dd/yyyy h:mm tt").Contains(DateFilter) &&
+                    t.Url.Contains(UrlFilter))
                     return true;
             }
             return false;
@@ -293,6 +314,8 @@ namespace LeboncoinParser
         private void DataBase_DBUpdated()
         {
             Realties = new ObservableCollection<Realty>(DataBase.Get());
+            MovieView = GetMovieCollectionView(Realties);
+            MovieView.Filter = OnFilterMovie;
         }
         string _Log = Parser.Log;
         public string Log

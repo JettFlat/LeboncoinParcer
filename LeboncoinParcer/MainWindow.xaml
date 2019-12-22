@@ -22,13 +22,37 @@
     </Window.Resources>
     <Grid>
         <ScrollViewer>
-            <StackPanel>
-                <Border Margin="5 5 5 5">
+            <DockPanel>
+                <materialDesign:Card Height="Auto" DockPanel.Dock="Bottom"  Margin="5 5 5 5">
+                    <StackPanel>
+                        <ScrollViewer MaxHeight="100">
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
+                        </ScrollViewer>
+                        <WrapPanel HorizontalAlignment="Center">
+                            <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
+                            <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
+                            <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
+                            <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}" IsEnabled="{Binding ExportEnable}"/>
+                            <Button Margin="5 5 5 5" Content="Clear Log" Command="{Binding Clear}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+                <Border DockPanel.Dock="Top" Margin="5 5 5 5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
                     </Border.Effect>
-                    <DataGrid ItemsSource="{Binding MovieView}" IsReadOnly="True" ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False">
+                    <DataGrid MaxHeight="300" ItemsSource="{Binding MovieView}" IsReadOnly="True" ScrollViewer.CanContentScroll="True"  AutoGenerateColumns="False">
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="Url" Binding="{Binding Url}">
+                                <DataGridTextColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding}"/>
+                                            <TextBox Text="{Binding DataContext.UrlFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTextColumn.HeaderTemplate>
+                            </DataGridTextColumn>
                             <DataGridTextColumn MaxWidth="200" Header="Name" Binding="{Binding Name}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -142,21 +166,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
-                <materialDesign:Card Margin="5 5 5 5">
-                    <StackPanel>
-                        <ScrollViewer MaxHeight="100">
-                            <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
-                        </ScrollViewer>
-                        <WrapPanel HorizontalAlignment="Center">
-                            <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
-                            <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
-                            <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
-                            <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}" IsEnabled="{Binding ExportEnable}"/>
-                            <Button Margin="5 5 5 5" Content="Clear Log" Command="{Binding Clear}"/>
-                        </WrapPanel>
-                    </StackPanel>
-                </materialDesign:Card>
-            </StackPanel>
+            </DockPanel>
         </ScrollViewer>
         <!--<DataGridTextColumn Header="No. Of Days" Width="80" Binding="{Binding NoOfDays}"/>
         <DataGridTemplateColumn Header="To be Finish Date" Width="110" IsReadOnly="True">

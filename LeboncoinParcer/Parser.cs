@@ -37,18 +37,15 @@ namespace LeboncoinParcer
         {
             //var tewst = new Settings { TimeSpan = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
             //File.WriteAllText("Settings.json",Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
-            
-
-
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
             #region Tests
             //List<string> linkpages = new List<string> { };
             //BinaryFormatter formatter = new BinaryFormatter();
-            //////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            //////{
-            //////    formatter.Serialize(fs, linkpages);
-            //////}
+            //////////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //////////{
+            //////////    formatter.Serialize(fs, linkpages);
+            //////////}
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    linkpages = (List<string>)formatter.Deserialize(fs);
