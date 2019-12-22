@@ -29,7 +29,7 @@ namespace LeboncoinParcer
             set
             {
                 _log = value;
-                LogChanged();//TODO REPAIR
+                LogChanged?.Invoke();
             }
         }
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
@@ -631,7 +631,7 @@ namespace LeboncoinParcer
             var list = sender as ObservableCollection<CustomWebProxy>;
             if (list.Count == StartCount)
                 if (!list.Any(x => x.IsBanned == false))
-                    Allbaned();
+                    Allbaned?.Invoke();
         }
     }
     public class Settings
