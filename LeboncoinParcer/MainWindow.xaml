@@ -25,7 +25,7 @@
                 <Border Margin="5 5 5 5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="5" ShadowDepth="0"/>
-                    </Border.Effect>
+                    </Border.Effect>    
                     <DataGrid IsReadOnly="True" ScrollViewer.CanContentScroll="True" MaxHeight="300" AutoGenerateColumns="False" ItemsSource="{Binding Realties}">
                         <DataGrid.Columns>
                             <DataGridTextColumn MaxWidth="200" Header="Name" Binding="{Binding Name}">
@@ -74,6 +74,7 @@
                             <DataGridTextColumn  Header="Furniture" Binding="{Binding Furniture}"/>
                             <DataGridTextColumn  Header="GES" Binding="{Binding Ges}"/>
                             <DataGridTextColumn  Header="Energy Class" Binding="{Binding EnergyClass}"/>
+                            <DataGridTextColumn  Header="Status" Binding="{Binding Status}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
@@ -86,7 +87,7 @@
                             <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
                             <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
                             <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
-                            <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}"/>
+                            <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}" IsEnabled="{Binding ExportEnable}"/>
                             <Button Margin="5 5 5 5" Content="Clear Log" Command="{Binding Clear}"/>
                         </WrapPanel>
                     </StackPanel>

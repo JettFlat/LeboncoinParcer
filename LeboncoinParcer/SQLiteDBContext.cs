@@ -56,14 +56,28 @@ namespace SQLiteAspNetCoreDemo
                 {
                     using (var context = new SQLiteDBContext())
                     {
+                        //Parser.Log += $"Parsing {o.Url} page".ToLogFormat();
                         string page = null;
                         while (page == null)
                             page = Parser.GetPage(o.Url, Parser.Timespan);
                         var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-                        var parsed = Parser.ParseRealty(o, page);
-                        item.Update(parsed);
+                        if (page == "skip")
+                        {
+                            Parser.Log += $"Broken page {o.Url}".ToLogFormat();
+                            item.Isbroken = true;
+                        }
+                        else
+                        {
+                            var parsed = Parser.ParseRealty(o, page);
+                            item.Update(parsed);
+                            Parser.Log += $"Page {o.Url} parsed".ToLogFormat();
+                        }
                         if (string.IsNullOrWhiteSpace(item.Phone))
+                        {
+                            if (!item.Isbroken)
+                                Parser.Log += $"Empty phone page {o.Url} ".ToLogFormat();
                             context.Realtys.Remove(item);
+                        }
                         context.SaveChanges();
                         DBUpdated();
                     }

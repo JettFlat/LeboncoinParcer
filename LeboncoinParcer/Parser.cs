@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using SQLiteAspNetCoreDemo;
 using System.Threading;
 using LeboncoinParser;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace LeboncoinParcer
 {
@@ -42,16 +43,16 @@ namespace LeboncoinParcer
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
             #region Tests
-            ////List<string> linkpages = new List<string> { };
-            ////BinaryFormatter formatter = new BinaryFormatter();
-            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            ////{
-            ////    formatter.Serialize(fs, linkpages);
-            ////}
-            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            ////{
-            ////    linkpages = (List<string>)formatter.Deserialize(fs);
-            ////}
+            //List<string> linkpages = new List<string> { };
+            //BinaryFormatter formatter = new BinaryFormatter();
+            //////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //////{
+            //////    formatter.Serialize(fs, linkpages);
+            //////}
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    linkpages = (List<string>)formatter.Deserialize(fs);
+            //}
             #endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
@@ -203,7 +204,6 @@ namespace LeboncoinParcer
         }
         public static string GetPage(string url, int Sleepms = 0)
         {
-            //UseLOCKER
             if (Sleepms > 0)
                 System.Threading.Thread.Sleep(Sleepms);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);

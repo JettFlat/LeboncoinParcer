@@ -19,6 +19,16 @@ namespace LeboncoinParcer
         public int Rooms { get; set; }
         public string Surface { get; set; }
         public string Furniture { get; set; }
+        public bool Isbroken { get; set; }
+        public string Status
+        {
+            get
+            {
+                if (Isbroken == true)
+                    return "Broken";
+                return "Active";
+            }
+        }
         public string Ges { get; set; }
         public string EnergyClass { set; get; }
         public string Desciption { get; set; }
@@ -32,6 +42,7 @@ namespace LeboncoinParcer
             Index = realty.Index;
             Type = realty.Type;
             Rooms = realty.Rooms;
+            Isbroken = realty.Isbroken;
             Surface = realty.Surface;
             Furniture = realty.Furniture;
             Ges = realty.Ges;
