@@ -306,6 +306,22 @@ namespace LeboncoinParser
                 exc.Write(MainWindow.Locker);
             }
         });
+        public RelayCommand Reqnavigate => new RelayCommand(o =>
+        {
+            try
+            {
+                var ps = new ProcessStartInfo((o as Realty).Url)
+                {
+                    UseShellExecute = true,
+                    Verb = "open"
+                };
+                Process.Start(ps);
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
+        });
         void Subscribe()
         {
             DataBase.DBUpdated += DataBase_DBUpdated;

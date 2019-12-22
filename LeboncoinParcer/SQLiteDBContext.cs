@@ -46,12 +46,14 @@ namespace SQLiteAspNetCoreDemo
             //CreateDB();
             Parser.Log += "Starting parsing/updating all ads.".ToLogFormat();
             List<Realty> list = new List<Realty> { };
+            int count = 0;
             using (var context = new SQLiteDBContext())
             {
                 list = context.Realtys.ToList();
             }
             foreach (var o in list)
             {
+                count++;
                 try
                 {
                     using (var context = new SQLiteDBContext())
@@ -63,19 +65,19 @@ namespace SQLiteAspNetCoreDemo
                         var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
                         if (page == "skip")
                         {
-                            Parser.Log += $"Broken page {o.Url}".ToLogFormat();
+                            Parser.Log += $"Page {count}/{list.Count} broken {o.Url} ".ToLogFormat();
                             item.Isbroken = true;
                         }
                         else
                         {
                             var parsed = Parser.ParseRealty(o, page);
                             item.Update(parsed);
-                            Parser.Log += $"Page {o.Url} parsed".ToLogFormat();
+                            Parser.Log += $"Page {count}/{list.Count} {o.Url} parsed".ToLogFormat();
                         }
                         if (string.IsNullOrWhiteSpace(item.Phone))
                         {
                             if (!item.Isbroken)
-                                Parser.Log += $"Empty phone page {o.Url} ".ToLogFormat();
+                                Parser.Log += $"Empty phone page {count}/{list.Count} {o.Url} ".ToLogFormat();
                             context.Realtys.Remove(item);
                         }
                         context.SaveChanges();
