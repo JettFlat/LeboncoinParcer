@@ -78,6 +78,7 @@ namespace LeboncoinParcer
             var d = GetDic(RealtysUrls);
             DataBase.AddToDb(d);
             UpdateDBitems(Token);
+            
         }
         public static void Export()
         {
@@ -105,7 +106,7 @@ namespace LeboncoinParcer
                     }
                     string phone = null;
                     while (phone == null)
-                        phone = GetPhone(R.Id,Parser.ProxyTimeout);
+                        phone = GetPhone(R.Id, Parser.ProxyTimeout);
                     realty.Phone = phone;
                     realty.Name = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']")?.FirstChild?.FirstChild?.InnerText) ?? null;
                     realty.LocalisationTown = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']")?.FirstChild?.InnerText) ?? null;
@@ -145,6 +146,7 @@ namespace LeboncoinParcer
         public static void UpdateDBitems(CancellationToken token)
         {
             DataBase.ParseAd(token);
+            Parser.Log += "End of parsing".ToLogFormat();
         }
         public static IEnumerable<string> GetAllPages()
         {
@@ -190,72 +192,83 @@ namespace LeboncoinParcer
         }
         private static void ProxyContainer_Allbaned()
         {
-            throw new Exception("All Proxies banned");
+            Parser.Log += "All proxies had been banned. Please change it and restart the application or wait. It could take a while.".ToLogFormat();
+            //throw new Exception("All Proxies banned");
         }
         public static string GetPage(string url, int Sleepms = 0)
         {
-
-            if (Sleepms > 0)
-                System.Threading.Thread.Sleep(Sleepms);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            var p = new CustomWebProxy();
-            bool wait = true;
-            while (wait)
-            {
-                lock (clocker)
-                {
-                    if (ProxyContainer.Collections.Count > 0)
-                    {
-                        p = ProxyContainer.Collections.Cut();
-                        request.Proxy = p;
-                        wait = false;
-                        break;
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            request.CookieContainer = new CookieContainer();
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-            request.Headers.Add("accept-encoding: gzip, deflate, br");
-            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
-            request.Headers.Add("Cache-Control: no-cache");
-            request.Host = "www.leboncoin.fr";
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            HttpWebResponse response = new HttpWebResponse();
             try
             {
-                response = (HttpWebResponse)request.GetResponse();
-            }
-            catch (Exception exc)
-            {
-                if (exc.Message == "The remote server returned an error: (410) Gone.")
+                if (Sleepms > 0)
+                    System.Threading.Thread.Sleep(Sleepms);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                var p = new CustomWebProxy();
+                bool wait = true;
+                while (wait)
                 {
                     lock (clocker)
-                        ProxyContainer.Collections.Add(p);
-                    return "skip";
+                    {
+                        if (ProxyContainer.Collections.Count > 0)
+                        {
+                            p = ProxyContainer.Collections.Cut();
+                            request.Proxy = p;
+                            wait = false;
+                            break;
+                        }
+                    }
+                    Thread.Sleep(1000);
                 }
-                p.IsBanned = true;
-                lock (clocker)
-                    ProxyContainer.Collections.Add(p);
-                return null;
-            }
-            lock (clocker)
-                ProxyContainer.Collections.Add(p);//Возможно прокси разбанят так что добавить isbanned=false
-            string page = "";
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                using (Stream receiveStream = response.GetResponseStream())
+                request.CookieContainer = new CookieContainer();
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+                request.Headers.Add("accept-encoding: gzip, deflate, br");
+                request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
+                request.Headers.Add("Cache-Control: no-cache");
+                request.Host = "www.leboncoin.fr";
+                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
+                HttpWebResponse response = new HttpWebResponse();
+                try
                 {
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.Load(receiveStream);
-                    page = doc.Text;
-                    return page;
+                    response = (HttpWebResponse)request.GetResponse();
                 }
+                catch (Exception exc)
+                {
+                    if (exc.Message == "The remote server returned an error: (410) Gone.")
+                    {
+                        lock (clocker)
+                            ProxyContainer.Collections.Add(p);
+                        return "skip";
+                    }
+                    if (exc.Message.Contains("did not properly respond after a period of time") || exc.Message.Contains("An error occurred while sending the request"))
+                    {
+                        lock (clocker)
+                            ProxyContainer.Collections.Add(p);
+                        return null;
+                    }
+                    p.IsBanned = true;
+                    lock (clocker)
+                        ProxyContainer.Collections.Add(p);
+                    return null;
+                }
+                lock (clocker)
+                    ProxyContainer.Collections.Add(p);//Возможно прокси разбанят так что добавить isbanned=false
+                string page = "";
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    using (Stream receiveStream = response.GetResponseStream())
+                    {
+                        HtmlDocument doc = new HtmlDocument();
+                        doc.Load(receiveStream);
+                        page = doc.Text;
+                        return page;
+                    }
+                }
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                    p.IsBanned = true;
+                response.Close();
             }
-            if (response.StatusCode == HttpStatusCode.Forbidden)
-                p.IsBanned = true;
-            response.Close();
+            catch (Exception)
+            { }
             return null;
         }
         public static string Parse(string html)
@@ -336,17 +349,17 @@ namespace LeboncoinParcer
                             ProxyContainer.Collections.Add(p);
                         return null;
                     }
-                    else
-                    {
-                        if (exc.Message != "The remote server returned an error: (410) Gone.")
-                        {
+                    //else
+                    //{
+                    //    if (exc.Message != "The remote server returned an error: (410) Gone.")
+                    //    {
 
-                        }
-                        else
-                        {
+                    //    }
+                    //    else
+                    //    {
 
-                        }
-                    }
+                    //    }
+                    //}
                     lock (clocker)
                         ProxyContainer.Collections.Add(p);
                     return "Empty";
@@ -363,11 +376,8 @@ namespace LeboncoinParcer
                     }
                 }
             }
-      
-            catch(Exception exc)
-            {
-                return null;
-            }
+            catch (Exception exc) { }
+            return null;
         }
     }
     class ProxyData

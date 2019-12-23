@@ -41,7 +41,7 @@ namespace LeboncoinParcer
 
             var sheets = service.Spreadsheets.Get(spreadsheetId).Execute().Sheets;
             string sheetName = "Data";
-            string range = $"{sheetName}!A:J";
+            string range = $"{sheetName}!A:K";
 
             if (sheets.Any(x => x.Properties.Title == sheetName))
             {
