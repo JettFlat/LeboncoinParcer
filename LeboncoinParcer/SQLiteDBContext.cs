@@ -107,6 +107,10 @@ namespace SQLiteAspNetCoreDemo
             }
             try
             {
+                //foreach (var o in list)
+                //{
+                   
+                //}
 
                 Parallel.ForEach(list, new ParallelOptions { CancellationToken = token }, o =>
                    {
@@ -136,7 +140,7 @@ namespace SQLiteAspNetCoreDemo
                                    item.Update(parsed);
                                    Parser.Log += $"Page {count}/{list.Count} {o.Url} parsed".ToLogFormat();
                                }
-                               if (string.IsNullOrWhiteSpace(item.Phone))
+                               if (string.IsNullOrWhiteSpace(item.Phone) || item.Phone == "Empty")
                                {
                                    if (!item.Isbroken)
                                        Parser.Log += $"Empty phone page {count}/{list.Count} {o.Url} ".ToLogFormat();
@@ -150,8 +154,6 @@ namespace SQLiteAspNetCoreDemo
                        {
 
                        }
-                       //if (!Parser.IsRun)
-                       //    return;
                    });
             }
             catch (OperationCanceledException exc) { }

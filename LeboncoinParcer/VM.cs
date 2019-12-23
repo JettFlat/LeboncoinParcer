@@ -220,15 +220,14 @@ namespace LeboncoinParser
         }
         bool OnFilterMovie(object item)
         {
-            //TODO
             Realty t = item as Realty;
             if (t != null)
             {
-                if (t.Phone.Contains(PhoneFilter) && t.Name.Contains(NameFilter) && t.LocalisationTown.Contains(LocationFilter) &&
-                    t.Type.Contains(TypeFilter) && t.Surface.Contains(SurfaceFilter) && t.Furniture.Contains(FurnitureFilter) &&
-                    t.Ges.Contains(GesFilter) && t.EnergyClass.Contains(EnergyClassFilter) && t.Status.Contains(StatusFilter) &&
+                if ((t.Phone ?? "").Contains(PhoneFilter) && (t.Name?? "").Contains(NameFilter) && (t.LocalisationTown ?? "").Contains(LocationFilter) &&
+                    (t.Type ?? "").Contains(TypeFilter) && (t.Surface ?? "").Contains(SurfaceFilter) && (t.Furniture ?? "").Contains(FurnitureFilter) &&
+                    (t.Ges ?? "").Contains(GesFilter) && (t.EnergyClass ?? "").Contains(EnergyClassFilter) && (t.Status ?? "").Contains(StatusFilter) &&
                     t.Rooms.ToString().Contains(RoomsFilter) && t.Date.ToString("MM/dd/yyyy h:mm tt").Contains(DateFilter) &&
-                    t.Url.Contains(UrlFilter))
+                    (t.Url ?? "").Contains(UrlFilter))
                     return true;
             }
             return false;

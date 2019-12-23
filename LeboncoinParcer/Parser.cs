@@ -17,10 +17,10 @@ namespace LeboncoinParcer
 {
     class Parser
     {
-        public static CancellationTokenSource cancelTokenSource { get; set; }=  new CancellationTokenSource();
+        public static CancellationTokenSource cancelTokenSource { get; set; } = new CancellationTokenSource();
         public static CancellationToken Token { get; set; } = cancelTokenSource.Token;
         public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
-        public static object clocker = new object();
+        public static object clocker { get; } = new object();
         public static object llocker = new object();
         public delegate void MethodContainer();
         public static event MethodContainer LogChanged;
@@ -103,7 +103,10 @@ namespace LeboncoinParcer
                         dt = DateTime.ParseExact(date, "dd/MM/yyyy  HH:mm", System.Globalization.CultureInfo.InvariantCulture); //TODO try cath
                         realty.Date = dt;
                     }
-                    realty.Phone = GetPhone(R.Id);
+                    string phone = null;
+                    while (phone == null)
+                        phone = GetPhone(R.Id,Parser.ProxyTimeout);
+                    realty.Phone = phone;
                     realty.Name = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']")?.FirstChild?.FirstChild?.InnerText) ?? null;
                     realty.LocalisationTown = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']")?.FirstChild?.InnerText) ?? null;
                     realty.Type = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']")?.FirstChild?.LastChild?.InnerText) ?? null;
@@ -191,6 +194,7 @@ namespace LeboncoinParcer
         }
         public static string GetPage(string url, int Sleepms = 0)
         {
+
             if (Sleepms > 0)
                 System.Threading.Thread.Sleep(Sleepms);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
@@ -225,13 +229,15 @@ namespace LeboncoinParcer
             }
             catch (Exception exc)
             {
-                lock (clocker)
-                    ProxyContainer.Collections.Add(p);
                 if (exc.Message == "The remote server returned an error: (410) Gone.")
                 {
+                    lock (clocker)
+                        ProxyContainer.Collections.Add(p);
                     return "skip";
                 }
                 p.IsBanned = true;
+                lock (clocker)
+                    ProxyContainer.Collections.Add(p);
                 return null;
             }
             lock (clocker)
@@ -268,69 +274,99 @@ namespace LeboncoinParcer
         }
         public static string GetPhone(string ID, int Sleepms = 0, string key = "54bb0281238b45a03f0ee695f73e704f")
         {
-            if (Sleepms > 0)
-                System.Threading.Thread.Sleep(Sleepms);
-            string result = "";
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.leboncoin.fr/api/utils/phonenumber.json");
-            var p = new CustomWebProxy();
-            bool wait = true;
-            while (wait)
-            {
-                lock (clocker)
-                {
-                    if (ProxyContainer.Collections.Count > 0)
-                    {
-                        p = ProxyContainer.Collections.Cut();
-                        request.Proxy = p;
-                        wait = false;
-                        break;
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            request.Method = "POST"; // для отправки используется метод Post
-            request.CookieContainer = new CookieContainer();
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-            request.Accept = "application/json";
-            request.Headers.Add("accept-encoding: gzip, deflate, br");
-            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
-            request.Host = "api.leboncoin.fr";
-            request.Headers.Add("Cache-Control: no-cache");
-
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            string data = $"app_id=leboncoin_web_utils&key={key}&list_id={ID}&text=1";
-            byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(data);
-            request.ContentLength = byteArray.Length;
-
-            //записываем данные в поток запроса
-            using (Stream dataStream = request.GetRequestStream())
-            {
-                dataStream.Write(byteArray, 0, byteArray.Length);
-            }
-            HttpWebResponse response = new HttpWebResponse();
             try
             {
-                response = (HttpWebResponse)request.GetResponse();
-            }
-            catch (Exception exc)
-            {
+                if (Sleepms > 0)
+                    System.Threading.Thread.Sleep(Sleepms);
+                string result = "";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.leboncoin.fr/api/utils/phonenumber.json");
+                var p = new CustomWebProxy();
+                bool wait = true;
+                while (wait)
+                {
+                    lock (clocker)
+                    {
+                        if (ProxyContainer.Collections.Count > 0)
+                        {
+                            p = ProxyContainer.Collections.Cut();
+                            request.Proxy = p;
+                            wait = false;
+                            break;
+                        }
+                    }
+                    Thread.Sleep(1000);
+                }
+                request.Method = "POST"; // для отправки используется метод Post
+                request.CookieContainer = new CookieContainer();
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+                request.Accept = "application/json";
+                request.Headers.Add("accept-encoding: gzip, deflate, br");
+                request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
+                request.Host = "api.leboncoin.fr";
+                request.Headers.Add("Cache-Control: no-cache");
+
+                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
+                string data = $"app_id=leboncoin_web_utils&key={key}&list_id={ID}&text=1";
+                byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(data);
+                request.ContentLength = byteArray.Length;
+
+                //записываем данные в поток запроса
+                using (Stream dataStream = request.GetRequestStream())
+                {
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                }
+                HttpWebResponse response = new HttpWebResponse();
+                try
+                {
+                    response = (HttpWebResponse)request.GetResponse();
+                }
+                catch (Exception exc)
+                {
+                    if (exc.Message == "The remote server returned an error: (403) Forbidden.")
+                    {
+                        p.IsBanned = true;
+                        lock (clocker)
+                            ProxyContainer.Collections.Add(p);
+                        return null;
+                    }
+                    if (exc.Message.Contains("did not properly respond after a period of time") || exc.Message.Contains("An error occurred while sending the request"))
+                    {
+                        lock (clocker)
+                            ProxyContainer.Collections.Add(p);
+                        return null;
+                    }
+                    else
+                    {
+                        if (exc.Message != "The remote server returned an error: (410) Gone.")
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    lock (clocker)
+                        ProxyContainer.Collections.Add(p);
+                    return "Empty";
+                }
                 lock (clocker)
                     ProxyContainer.Collections.Add(p);
-                if (exc.Message != "The remote server returned an error: (410) Gone.")
-                    p.IsBanned = true;
-                return null;
-            }
-            lock (clocker)
-                ProxyContainer.Collections.Add(p);
-            using (Stream stream = response.GetResponseStream())
-            {
-                using (StreamReader reader = new StreamReader(stream))
+                using (Stream stream = response.GetResponseStream())
                 {
-                    result = reader.ReadToEnd();
-                    result = System.Text.RegularExpressions.Regex.Replace(result, @"[^\d]+", "");
-                    return result;
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        result = reader.ReadToEnd();
+                        result = System.Text.RegularExpressions.Regex.Replace(result, @"[^\d]+", "");
+                        return result;
+                    }
                 }
+            }
+      
+            catch(Exception exc)
+            {
+                return null;
             }
         }
     }

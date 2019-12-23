@@ -25,9 +25,9 @@
             <materialDesign:Card Height="Auto" DockPanel.Dock="Bottom"  Margin="5 5 5 5">
                 <StackPanel>
 
-                    <ScrollViewer MaxHeight="100">
+                    <!--<ScrollViewer MaxHeight="100">
                         <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
-                    </ScrollViewer>
+                    </ScrollViewer>-->
                     <WrapPanel HorizontalAlignment="Center">
                         <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
                         <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
