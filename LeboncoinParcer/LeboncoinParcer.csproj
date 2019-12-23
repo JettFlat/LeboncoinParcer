@@ -8,8 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="blogging.db" />
-      <None Remove="ProxyListEdited.pl" />
+      <None Remove="DataBase.db" />
+      <None Remove="Proxy.pl" />
+      <None Remove="Settings.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -22,10 +23,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="blogging.db">
+      <Content Include="DataBase.db">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       </Content>
-      <Content Include="ProxyListEdited.pl">
+      <Content Include="Proxy.pl">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Settings.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
@@ -46,9 +50,6 @@
 
     <ItemGroup>
       <None Update="credentials.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Settings.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

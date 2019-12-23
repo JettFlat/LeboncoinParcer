@@ -18,8 +18,9 @@ namespace LeboncoinParcer
     class Parser
     {
         public static bool IsRun { get; set; } = true;
-        public static int Timespan = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).TimeSpan;
+        public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
         public static object clocker = new object();
+        public static object llocker = new object();
         public delegate void MethodContainer();
         public static event MethodContainer LogChanged;
         static string _log = "Start".ToLogFormat();
@@ -30,13 +31,19 @@ namespace LeboncoinParcer
             {
                 _log = value;
                 LogChanged?.Invoke();
+                try
+                {
+                    lock (llocker)
+                        File.WriteAllText("Log.lg", _log);
+                }
+                catch (Exception) { }
             }
         }
-        public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("ProxyListEdited.pl")).ToList()));
+        public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("Proxy.pl")).ToList()));
         public static void Start()
         {
-            //var tewst = new Settings { TimeSpan = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
-            //File.WriteAllText("Settings.json",Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
+            //var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
+            //File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
             #region Tests
@@ -136,7 +143,7 @@ namespace LeboncoinParcer
             {
                 string page = null;
                 while (page == null && IsRun)
-                    page = GetPage(url + path, Timespan);
+                    page = GetPage(url + path, ProxyTimeout);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
                 yield return page;
                 path = Parse(page);
@@ -166,34 +173,6 @@ namespace LeboncoinParcer
                     results.Add(key, o);
             }
             return results;
-        }
-        public static Dictionary<string, string> GetPages(List<string> UrlContainer)
-        {
-            Dictionary<string, string> results = new Dictionary<string, string> { };
-            Parallel.ForEach(UrlContainer, o =>
-            {
-                string page = null;
-                while (page == null)
-                    page = GetPage(o, Timespan);
-                if (page == "skip")
-                    return;
-                results.Add(System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", ""), page);
-            });
-            return results;
-        }
-
-        static void WritePages(List<string> UrlContainer, string path = @"pages/Realty/")
-        {
-            new DirectoryInfo(path).Create();
-            Parallel.ForEach(UrlContainer, o =>
-            {
-                string page = null;
-                while (page == null)
-                    page = GetPage(o, Timespan);
-                if (page == "skip")
-                    return;
-                File.WriteAllText($"{path}{System.Text.RegularExpressions.Regex.Replace(o, @"[^\d]+", "")}.html", page);
-            });
         }
         private static void ProxyContainer_Allbaned()
         {
@@ -276,72 +255,6 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static bool IsBlocked(WebProxy proxy = null)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.leboncoin.fr");
-            if (proxy != null)
-                request.Proxy = proxy;
-            request.CookieContainer = new CookieContainer();
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-            request.Headers.Add("accept-encoding: gzip, deflate, br");
-            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
-            request.Headers.Add("Cache-Control: no-cache");
-            request.Host = "www.leboncoin.fr";
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            HttpWebResponse response = new HttpWebResponse();
-            try
-            {
-                response = (HttpWebResponse)request.GetResponse();
-            }
-            catch (System.Net.WebException exc)
-            {
-                if (exc.Message == "The remote server returned an error: (403) Forbidden.")
-                    return true;
-            }
-            string page = "";
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                using (Stream receiveStream = response.GetResponseStream())
-                {
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.Load(receiveStream);
-                    page = doc.Text;
-                    var htmlDoc = new HtmlDocument();
-                    htmlDoc.LoadHtml(page);
-                    var node = htmlDoc.DocumentNode.SelectSingleNode("//head/title");
-                    if (node.OuterHtml != @"<title>You have been blocked</title>")
-                        return false;
-                }
-            }
-            return true;
-        }
-        static string GetCookies(string url)
-        {
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.CookieContainer = new CookieContainer();
-            StringBuilder st = new StringBuilder();
-            using (var response = (HttpWebResponse)request.GetResponse())
-            {
-                foreach (System.Net.Cookie cook in response.Cookies)
-                {
-                    st.AppendLine("Cookie:");
-                    st.AppendLine($"{cook.Name} = {cook.Value}");
-                    st.AppendLine($"Domain: {cook.Domain}");
-                    st.AppendLine($"Path: {cook.Path}");
-                    st.AppendLine($"Port: {cook.Port}");
-                    st.AppendLine($"Secure: {cook.Secure}");
-                    st.AppendLine($"When issued: {cook.TimeStamp}");
-                    st.AppendLine($"Expires: {cook.Expires} (expired? {cook.Expired})");
-                    st.AppendLine($"Don't save: {cook.Discard}");
-                    st.AppendLine($"Comment: {cook.Comment}");
-                    st.AppendLine($"Uri for comments: {cook.CommentUri}");
-                    st.AppendLine($"Version: RFC {(cook.Version == 1 ? 2109 : 2965)}");
-                    st.AppendLine($"String: {cook}");
-                }
-            }
-            return st.ToString();
-        }
         public static string GetPhone(string ID, int Sleepms = 0, string key = "54bb0281238b45a03f0ee695f73e704f")
         {
             if (Sleepms > 0)
@@ -415,72 +328,6 @@ namespace LeboncoinParcer
         public string Adress { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-        public static bool CheckProxy(string proxy)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://google.com");
-            request.Proxy = new WebProxy(proxy);
-            request.Timeout = 10000;
-            request.Method = "HEAD";
-            try
-            {
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                        return true;
-                }
-            }
-            catch (Exception) { }
-            return false;
-        }
-        public static bool Baning(string url, string adress, string user = null, string password = null)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            if (user != null && password != null)
-                request.Proxy = new WebProxy(adress, false, null, new NetworkCredential(user, password));
-            else
-                request.Proxy = new WebProxy(adress);
-            request.Timeout = 10000;
-            request.CookieContainer = new CookieContainer();
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-            request.Headers.Add("accept-encoding: gzip, deflate, br");
-            request.Headers.Add("accept-language: en-US,en;q=0.9,ru;q=0.8");
-            request.Headers.Add("Cache-Control: no-cache");
-            request.Host = "www.leboncoin.fr";
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
-            try
-            {
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                        return false;
-                }
-            }
-            catch (Exception)
-            {
-            }
-            return true;
-        }
-        public static bool CheckProxy(string url, string adress, string user = null, string password = null)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            if (user != null && password != null)
-                request.Proxy = new WebProxy(adress, false, null, new NetworkCredential(user, password));
-            else
-                request.Proxy = new WebProxy(adress);
-            request.Timeout = 10000;
-            request.Method = "HEAD";
-            try
-            {
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                        return true;
-                }
-            }
-            catch (Exception) { }
-            return false;
-        }
         public static IEnumerable<CustomWebProxy> GetProxy(IEnumerable<string> ProxyList)
         {
             ProxyList = ProxyList.Where(x => !string.IsNullOrWhiteSpace(x));
@@ -508,46 +355,7 @@ namespace LeboncoinParcer
                     yield return new CustomWebProxy(item.Adress);
             }
         }
-        /// <summary>
-        /// Get avalible http proxy 
-        /// </summary>
-        /// <param name="URL">Testing url</param>
-        /// <param name="ProxyList">Proxy Line Format adress:port#username#pass</param>
-        /// <returns></returns>
-        public static IEnumerable<CustomWebProxy> GetAvalibleProxy(string URL, IEnumerable<string> ProxyList, int MaxDegreeParallelism = 4)
-        {
-            ProxyList = ProxyList.Where(x => !string.IsNullOrWhiteSpace(x));
-            object locker = new object();
-            List<ProxyData> Proxs = new List<ProxyData> { };
-            Parallel.ForEach(ProxyList, o =>
-            {
-                if (!o.Contains('#'))
-                {
-                    lock (locker)
-                        Proxs.Add(new ProxyData { Adress = o });
-                    return;
-                }
-                string[] array = o.Split('#');
-                if (array.Length > 2)
-                    lock (locker)
-                        Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
-            }
-            );
-            foreach (var item in Proxs)
-            {
-                if (CheckProxy(URL, item.Adress, item.UserName, item.Password))
-                {
-                    if (item.UserName != null && item.Password != null)
-                        yield return new CustomWebProxy(item.Adress, false, null, new NetworkCredential(item.UserName, item.Password));
-                    else
-                        yield return new CustomWebProxy(item.Adress);
-                }
-                else
-                {
 
-                }
-            }
-        }
     }
     public class CustomWebProxy : WebProxy
     {
@@ -633,7 +441,7 @@ namespace LeboncoinParcer
     }
     public class Settings
     {
-        public int TimeSpan { get; set; }
+        public int ProxyTimeout { get; set; }
         public string TableId { get; set; }
     }
 

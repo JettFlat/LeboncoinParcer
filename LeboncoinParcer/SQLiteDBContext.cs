@@ -10,7 +10,7 @@ namespace SQLiteAspNetCoreDemo
     {
         public DbSet<Realty> Realtys { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite("Data Source=blogging.db");
+            => options.UseSqlite("Data Source=DataBase.db");
 
 
     }
@@ -61,7 +61,7 @@ namespace SQLiteAspNetCoreDemo
                         //Parser.Log += $"Parsing {o.Url} page".ToLogFormat();
                         string page = null;
                         while (page == null)
-                            page = Parser.GetPage(o.Url, Parser.Timespan);
+                            page = Parser.GetPage(o.Url, Parser.ProxyTimeout);
                         var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
                         if (page == "skip")
                         {
@@ -100,35 +100,5 @@ namespace SQLiteAspNetCoreDemo
                 context.SaveChanges();
             }
         }
-        //public static void ParseAd()
-        //{
-        //    List<Realty> list = new List<Realty> { };
-        //    using (var context = new SQLiteDBContext())
-        //    {
-        //        list = context.Realtys.ToList();
-        //    }
-        //    foreach (var o in list)
-        //    {
-        //        try
-        //        {
-        //            using (var context = new SQLiteDBContext())
-        //            {
-        //                string page = null;
-        //                while (page == null)
-        //                    page = Parser.GetPage(o.Url, Parser.Timespan);
-        //                var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-        //                var parsed = Parser.ParseRealty(o, page);
-        //                item.Update(parsed);
-        //                context.SaveChanges();
-        //                DBUpdated();
-        //            }
-        //        }
-        //        catch (Exception)
-        //        {
-
-        //        }
-
-        //    }
-        //}
     }
 }

@@ -24,14 +24,14 @@ namespace LeboncoinParser
             MovieView = GetMovieCollectionView(Realties);
             MovieView.Filter = OnFilterMovie;
         }
-        string _Text = Parser.Timespan.ToString();
+        string _Text = Parser.ProxyTimeout.ToString();
         public string Text
         {
             get => _Text;
             set
             {
                 _Text = value;
-                Parser.Timespan = Int32.Parse(_Text);
+                Parser.ProxyTimeout = Int32.Parse(_Text);
                 OnPropertyChanged();
             }
         }

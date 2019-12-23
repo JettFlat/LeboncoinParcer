@@ -13,7 +13,7 @@
      TextOptions.TextRenderingMode="Auto"
         Title="leboncoin Parser"
      Background="{DynamicResource MaterialDesignPaper}"
-     FontFamily="{DynamicResource MaterialDesignFont}" SizeToContent="Width" Height="400">
+     FontFamily="{DynamicResource MaterialDesignFont}" SizeToContent="Width" Height="400" >
     <Window.DataContext>
         <local:VM/>
     </Window.DataContext>
