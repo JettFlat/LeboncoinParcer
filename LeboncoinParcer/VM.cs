@@ -239,7 +239,7 @@ namespace LeboncoinParser
         {
             try
             {
-                Parser.IsRun = true;
+                Parser.Resettoken();
                 Visible = false;
                 UpVisible = false;
                 Task.Run(() => { Parser.Start(); Visible = true; UpVisible = true; });
@@ -260,7 +260,7 @@ namespace LeboncoinParser
         {
             try
             {
-                Parser.IsRun = false;
+                Parser.Stoptoken();
             }
             catch (Exception exc)
             {
@@ -284,11 +284,10 @@ namespace LeboncoinParser
         {
             try
             {
-                Parser.IsRun = true;
-                //Subscribe();
+                Parser.Resettoken();
                 Visible = false;
                 UpVisible = false;
-                Task.Run(() => { Parser.UpdateDBitems(); Visible = true; UpVisible = true; });
+                Task.Run(() => { Parser.UpdateDBitems(Parser.Token); Visible = true; UpVisible = true; });
             }
             catch (Exception exc)
             {

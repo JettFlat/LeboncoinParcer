@@ -17,7 +17,8 @@ namespace LeboncoinParcer
 {
     class Parser
     {
-        public static bool IsRun { get; set; } = true;
+        public static CancellationTokenSource cancelTokenSource { get; set; }=  new CancellationTokenSource();
+        public static CancellationToken Token { get; set; } = cancelTokenSource.Token;
         public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
         public static object clocker = new object();
         public static object llocker = new object();
@@ -40,13 +41,23 @@ namespace LeboncoinParcer
             }
         }
         public static ProxyContainer ProxyContainer { get; set; } = new ProxyContainer(new ObservableCollection<CustomWebProxy>(ProxyData.GetProxy(File.ReadAllLines("Proxy.pl")).ToList()));
+        public static void Stoptoken()
+        {
+            cancelTokenSource.Cancel();
+        }
+        public static void Resettoken()
+        {
+            cancelTokenSource.Dispose();
+            cancelTokenSource = new CancellationTokenSource();
+            Token = cancelTokenSource.Token;
+        }
         public static void Start()
         {
-            //var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
-            //File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages().ToList();
             #region Tests
+            //var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
+            //File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
             //List<string> linkpages = new List<string> { };
             //BinaryFormatter formatter = new BinaryFormatter();
             //////////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
@@ -66,7 +77,7 @@ namespace LeboncoinParcer
             }
             var d = GetDic(RealtysUrls);
             DataBase.AddToDb(d);
-            UpdateDBitems();
+            UpdateDBitems(Token);
         }
         public static void Export()
         {
@@ -128,9 +139,9 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static void UpdateDBitems()
+        public static void UpdateDBitems(CancellationToken token)
         {
-            DataBase.ParseAd();
+            DataBase.ParseAd(token);
         }
         public static IEnumerable<string> GetAllPages()
         {
@@ -139,10 +150,10 @@ namespace LeboncoinParcer
             string url = "https://www.leboncoin.fr";
             string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
             int count = 1;
-            while (path != null && IsRun)
+            while (path != null && !Token.IsCancellationRequested)
             {
                 string page = null;
-                while (page == null && IsRun)
+                while (page == null && !Token.IsCancellationRequested)
                     page = GetPage(url + path, ProxyTimeout);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
                 yield return page;

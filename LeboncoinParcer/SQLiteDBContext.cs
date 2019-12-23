@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace SQLiteAspNetCoreDemo
 {
@@ -93,7 +94,7 @@ namespace SQLiteAspNetCoreDemo
         //            break;
         //    }
         ////}
-        public static void ParseAd()
+        public static void ParseAd(CancellationToken token)
         {
             //CreateDB();
             Parser.Log += "Starting parsing/updating all ads.".ToLogFormat();
@@ -104,51 +105,56 @@ namespace SQLiteAspNetCoreDemo
             {
                 list = context.Realtys.ToList();
             }
-            Parallel.ForEach(list, o =>
+            try
             {
-                int count;
-                lock (locker)
-                {
-                    ccount++;
-                    count = ccount;
-                }
-                try
-                {
-                    using (var context = new SQLiteDBContext())
-                    {
-                        //Parser.Log += $"Parsing {o.Url} page".ToLogFormat();
-                        string page = null;
-                        while (page == null)
-                            page = Parser.GetPage(o.Url, Parser.ProxyTimeout);
-                        var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
-                        if (page == "skip")
-                        {
-                            Parser.Log += $"Page {count}/{list.Count} broken {o.Url} ".ToLogFormat();
-                            item.Isbroken = true;
-                        }
-                        else
-                        {
-                            var parsed = Parser.ParseRealty(o, page);
-                            item.Update(parsed);
-                            Parser.Log += $"Page {count}/{list.Count} {o.Url} parsed".ToLogFormat();
-                        }
-                        if (string.IsNullOrWhiteSpace(item.Phone))
-                        {
-                            if (!item.Isbroken)
-                                Parser.Log += $"Empty phone page {count}/{list.Count} {o.Url} ".ToLogFormat();
-                            context.Realtys.Remove(item);
-                        }
-                        context.SaveChanges();
-                        DBUpdated();
-                    }
-                }
-                catch (Exception)
-                {
 
-                }
-                //if (!Parser.IsRun)
-                //    return;
-            });
+                Parallel.ForEach(list, new ParallelOptions { CancellationToken = token }, o =>
+                   {
+                       int count;
+                       lock (locker)
+                       {
+                           ccount++;
+                           count = ccount;
+                       }
+                       try
+                       {
+                           using (var context = new SQLiteDBContext())
+                           {
+                               //Parser.Log += $"Parsing {o.Url} page".ToLogFormat();
+                               string page = null;
+                               while (page == null)
+                                   page = Parser.GetPage(o.Url, Parser.ProxyTimeout);
+                               var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
+                               if (page == "skip")
+                               {
+                                   Parser.Log += $"Page {count}/{list.Count} broken {o.Url} ".ToLogFormat();
+                                   item.Isbroken = true;
+                               }
+                               else
+                               {
+                                   var parsed = Parser.ParseRealty(o, page);
+                                   item.Update(parsed);
+                                   Parser.Log += $"Page {count}/{list.Count} {o.Url} parsed".ToLogFormat();
+                               }
+                               if (string.IsNullOrWhiteSpace(item.Phone))
+                               {
+                                   if (!item.Isbroken)
+                                       Parser.Log += $"Empty phone page {count}/{list.Count} {o.Url} ".ToLogFormat();
+                                   context.Realtys.Remove(item);
+                               }
+                               context.SaveChanges();
+                               DBUpdated();
+                           }
+                       }
+                       catch (Exception)
+                       {
+
+                       }
+                       //if (!Parser.IsRun)
+                       //    return;
+                   });
+            }
+            catch (OperationCanceledException exc) { }
         }
         public static void CreateDB()
         {
