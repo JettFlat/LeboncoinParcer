@@ -94,7 +94,7 @@ namespace SQLiteAspNetCoreDemo
         //            break;
         //    }
         ////}
-        public static void ParseAd(CancellationToken token, bool UseRewrite=false)
+        public static void ParseAd(bool UseRewrite=false)
         {
             //CreateDB();
             Parser.Log += "Starting parsing/updating all ads.".ToLogFormat();
@@ -107,12 +107,7 @@ namespace SQLiteAspNetCoreDemo
             }
             try
             {
-                //foreach (var o in list)
-                //{
-                   
-                //}
-
-                Parallel.ForEach(list, new ParallelOptions { CancellationToken = token }, o =>
+                Parallel.ForEach(list, Parser.Options, o =>
                    {
                        int count;
                        lock (locker)

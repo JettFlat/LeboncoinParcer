@@ -19,8 +19,12 @@ namespace LeboncoinParcer
     {
         public static CancellationTokenSource cancelTokenSource { get; set; } = new CancellationTokenSource();
         public static CancellationToken Token { get; set; } = cancelTokenSource.Token;
+        public static ParallelOptions Options => new ParallelOptions { CancellationToken = Token, MaxDegreeOfParallelism = 3 };
+        public static List<DistrictContainer> Districts { get; } = Newtonsoft.Json.JsonConvert.DeserializeObject<List<DistrictContainer>>(File.ReadAllText("Districts.json"));
         public static int TaskCount => -1;
         public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
+        public static int PCount { get; set; }
+        public static object PClocker { get; } = new object();
         public static object clocker { get; } = new object();
         public static object llocker = new object();
         public delegate void MethodContainer();
@@ -57,18 +61,18 @@ namespace LeboncoinParcer
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages();
             //#region Tests
-            ////var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
-            ////File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
-            ////List<string> linkpages = new List<string> { };
-            //BinaryFormatter formatter = new BinaryFormatter();
-            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            //{
-            //    formatter.Serialize(fs, linkpages);
-            //}
-            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            //{
-            //    linkpages = (List<string>)formatter.Deserialize(fs);
-            //}
+            //////var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
+            //////File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
+            //////List<string> linkpages = new List<string> { };
+            ////BinaryFormatter formatter = new BinaryFormatter();
+            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            ////{
+            ////    formatter.Serialize(fs, linkpages);
+            ////}
+            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            ////{
+            ////    linkpages = (List<string>)formatter.Deserialize(fs);
+            ////}
             //#endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
@@ -81,7 +85,7 @@ namespace LeboncoinParcer
             RealtysUrls = null;
             DataBase.AddToDb(d);
             d = null;
-            UpdateDBitems(Token);
+            UpdateDBitems();
 
         }
         public static void Export()
@@ -114,6 +118,15 @@ namespace LeboncoinParcer
                     realty.Phone = phone;
                     realty.Name = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_title']")?.FirstChild?.FirstChild?.InnerText) ?? null;
                     realty.LocalisationTown = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='adview_location_informations']")?.FirstChild?.InnerText) ?? null;
+                    if (!string.IsNullOrWhiteSpace(realty.LocalisationTown))
+                    {
+                        realty.Index = System.Text.RegularExpressions.Regex.Replace((realty.LocalisationTown ?? ""), @"[^\d]+", "");
+                        if (realty.Index.Length > 1)
+                        {
+                            var tmp = realty.Index.Substring(0, 2);
+                            realty.District = Districts.FirstOrDefault(x => x.Numbers.Contains(tmp))?.District ?? $"Add {tmp} in Districts.json";
+                        }
+                    }
                     realty.Type = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_real_estate_type']")?.FirstChild?.LastChild?.InnerText) ?? null;
                     string RoomText = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//div[@data-qa-id='criteria_item_rooms']")?.FirstChild?.LastChild?.InnerText) ?? null;
                     int c;
@@ -147,26 +160,30 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static void UpdateDBitems(CancellationToken token, bool UseReWrite = false)
+        public static void UpdateDBitems(bool UseReWrite = false)
         {
-            DataBase.ParseAd(token);
+            DataBase.ParseAd(UseReWrite);
             Parser.Log += "End of parsing".ToLogFormat();
         }
 
         public static IEnumerable<string> GetAllPages()
         {
-            List<AdBox> list = AdBox.GetValid(Token, TaskCount);
+
+            List<AdBox> list = AdBox.GetValid();
             List<string> result = new List<string> { };
             //foreach(var o in list)
             //{
-               
+
             //}
-            Parallel.ForEach(list, new ParallelOptions { CancellationToken = Token }, o =>
+            try
             {
-                result.AddRange(GetPages("/recherche/?category=10&owner_type=private&real_estate_type=1&square=" + $"{o.Startvalue}-{o.Endvalue}"));
-            });
-            
-            
+                Parallel.ForEach(list, Options, o =>
+                {
+                    result.AddRange(GetPages("/recherche/?category=10&owner_type=private&real_estate_type=1&square=" + $"{o.Startvalue}-{o.Endvalue}"));
+                });
+            }
+            catch (OperationCanceledException exc) { }
+
             return result;
         }
         public static IEnumerable<string> GetPages(string Path)
@@ -175,7 +192,6 @@ namespace LeboncoinParcer
             List<string> Parsed = new List<string> { };
             string url = "https://www.leboncoin.fr";
             string path = Path;
-            int count = 1;
             while (path != null && !Token.IsCancellationRequested)
             {
                 string page = null;
@@ -183,8 +199,11 @@ namespace LeboncoinParcer
                     page = GetPage(url + path, ProxyTimeout);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
                 path = Parse(page);
-                Log += $"Downloaded page#{count}".ToLogFormat();
-                count++;
+                lock (PClocker)
+                {
+                    PCount++;
+                    Log += $"Downloaded page#{PCount}".ToLogFormat();
+                }
             }
             return Parsed;
         }
@@ -435,20 +454,24 @@ namespace LeboncoinParcer
             ProxyList = ProxyList.Where(x => !string.IsNullOrWhiteSpace(x));
             object locker = new object();
             List<ProxyData> Proxs = new List<ProxyData> { };
-            Parallel.ForEach(ProxyList, o =>
+            try
             {
-                if (!o.Contains('#'))
+                Parallel.ForEach(ProxyList, Parser.Options, o =>
                 {
-                    lock (locker)
-                        Proxs.Add(new ProxyData { Adress = o });
-                    return;
+                    if (!o.Contains('#'))
+                    {
+                        lock (locker)
+                            Proxs.Add(new ProxyData { Adress = o });
+                        return;
+                    }
+                    string[] array = o.Split('#');
+                    if (array.Length > 2)
+                        lock (locker)
+                            Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
                 }
-                string[] array = o.Split('#');
-                if (array.Length > 2)
-                    lock (locker)
-                        Proxs.Add(new ProxyData { Adress = array[0], UserName = array[1], Password = array[2] });
+                );
             }
-            );
+            catch (OperationCanceledException exc) { }
             foreach (var item in Proxs)
             {
                 if (item.UserName != null && item.Password != null)
@@ -568,11 +591,8 @@ namespace LeboncoinParcer
             AdBox ad2 = new AdBox { Startvalue = (tmp + 1).ToString(), Endvalue = ad.Endvalue };
             return new List<AdBox> { ad1, ad2 };
         }
-        public static List<AdBox> GetValid(CancellationToken cts, int TaskCount = -1)
+        public static List<AdBox> GetValid()
         {
-            var options = new ParallelOptions { CancellationToken = cts };
-            if (TaskCount != -1)
-                options.MaxDegreeOfParallelism = TaskCount;
             int start = 0;
             int end = 300;
             AdBox ad = new AdBox { Startvalue = $"{start}", Endvalue = $"{end}", Count = 99999999 };
@@ -581,28 +601,34 @@ namespace LeboncoinParcer
             while (wrong.Count > 0 && !Parser.Token.IsCancellationRequested)
             {
                 list.RemoveAll(x => (x.IsValid() == false));//TODO check wrong count == 1
-                Parallel.ForEach(wrong, options, o =>
-               {
-                   var splitted = Split(o);
-                   while (splitted[0].Count < 1 && splitted[1].Count < 1 && !Parser.Token.IsCancellationRequested)
-                   {
-                       splitted[0].Count = Parser.GetAdCount(splitted[0]);
-                       splitted[1].Count = Parser.GetAdCount(splitted[1]);
-                   }
-                   list.Add(splitted[0]);
-                   list.Add(splitted[1]);
-               }
-                );
-                //foreach (var o in wrong)
-                //{
 
-                //}
+                try
+                {
+                    Parallel.ForEach(wrong, Parser.Options, o =>
+                   {
+                       var splitted = Split(o);
+                       while (splitted[0].Count < 1 && splitted[1].Count < 1 && !Parser.Token.IsCancellationRequested)
+                       {
+                           splitted[0].Count = Parser.GetAdCount(splitted[0]);
+                           splitted[1].Count = Parser.GetAdCount(splitted[1]);
+                       }
+                       list.Add(splitted[0]);
+                       list.Add(splitted[1]);
+                   }
+                    );
+                }
+                catch (OperationCanceledException exc) { }
                 wrong = list.Where(x => (x.IsValid() == false)).ToList();
             }
             list.Add(new AdBox { Startvalue = $"301", Endvalue = "max" });
             return list;
         }
     }
+    public class DistrictContainer
+    {
+        public List<string> Numbers { get; set; }
+        public string District { get; set; }
 
+    }
 
 }

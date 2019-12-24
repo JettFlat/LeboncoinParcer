@@ -204,6 +204,17 @@ namespace LeboncoinParser
                 UpdateDataGrid();
             }
         }
+        string _DistrictFilter = "";
+        public string DistrictFilter
+        {
+            get => _DistrictFilter;
+            set
+            {
+                _DistrictFilter = value;
+                OnPropertyChanged();
+                UpdateDataGrid();
+            }
+        }
         CollectionView _MovieView;
         public CollectionView MovieView
         {
@@ -227,7 +238,7 @@ namespace LeboncoinParser
                     (t.Type ?? "").Contains(TypeFilter) && (t.Surface ?? "").Contains(SurfaceFilter) && (t.Furniture ?? "").Contains(FurnitureFilter) &&
                     (t.Ges ?? "").Contains(GesFilter) && (t.EnergyClass ?? "").Contains(EnergyClassFilter) && (t.Status ?? "").Contains(StatusFilter) &&
                     t.Rooms.ToString().Contains(RoomsFilter) && t.Date.ToString("MM/dd/yyyy h:mm tt").Contains(DateFilter) &&
-                    (t.Url ?? "").Contains(UrlFilter))
+                    (t.Url ?? "").Contains(UrlFilter) && (t.District ?? "").Contains(DistrictFilter))
                     return true;
             }
             return false;
@@ -286,7 +297,7 @@ namespace LeboncoinParser
                 Parser.Resettoken();
                 Visible = false;
                 UpVisible = false;
-                Task.Run(() => { Parser.UpdateDBitems(Parser.Token,true); Visible = true; UpVisible = true; });
+                Task.Run(() => { Parser.UpdateDBitems(true); Visible = true; UpVisible = true; });
             }
             catch (Exception exc)
             {
@@ -328,8 +339,6 @@ namespace LeboncoinParser
         private void DataBase_DBUpdated()
         {
             Realties = new ObservableCollection<Realty>(DataBase.Get());
-            MovieView = GetMovieCollectionView(Realties);
-            MovieView.Filter = OnFilterMovie;
         }
         string _Log = Parser.Log;
         public string Log
@@ -349,6 +358,8 @@ namespace LeboncoinParser
             set
             {
                 _Realties = value;
+                MovieView = GetMovieCollectionView(Realties);
+                MovieView.Filter = OnFilterMovie;
                 OnPropertyChanged();
             }
         }

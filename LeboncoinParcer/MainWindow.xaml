@@ -24,9 +24,9 @@
         <DockPanel>
             <materialDesign:Card Height="Auto" DockPanel.Dock="Bottom"  Margin="5 5 5 5">
                 <StackPanel>
-                    <ScrollViewer MaxHeight="100">
-                        <TextBlock TextWrapping="Wrap" Text="{Binding Log}" MinHeight="100"/>
-                    </ScrollViewer>
+                    <!--<ScrollViewer MaxHeight="100" />-->
+                    <TextBox  VerticalScrollBarVisibility="Visible" Height="100" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding Log}"/>
+                    <!--</ScrollViewer>-->
                     <WrapPanel HorizontalAlignment="Center">
                         <Button Margin="5 5 5 5" Content="Start" Command="{Binding Start}" IsEnabled="{Binding Visible}"/>
                         <Button Margin="5 5 5 5" Content="Stop" Command="{Binding Stop}" />
@@ -87,6 +87,16 @@
                                     <StackPanel>
                                         <TextBlock Text="{Binding}"/>
                                         <TextBox Text="{Binding DataContext.PhoneFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTextColumn.HeaderTemplate>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn  Header="Table District" Binding="{Binding District}">
+                            <DataGridTextColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding}"/>
+                                        <TextBox Text="{Binding DataContext.DistrictFilter, RelativeSource={RelativeSource AncestorType=DataGrid},Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTextColumn.HeaderTemplate>

@@ -22,7 +22,6 @@ namespace LeboncoinParser
             try
             {
                 DataBase.CreateDB();
-                Parser.Start();
                 InitializeComponent();
             }
             catch (Exception exc)
