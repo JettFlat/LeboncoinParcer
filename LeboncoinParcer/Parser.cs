@@ -19,6 +19,7 @@ namespace LeboncoinParcer
     {
         public static CancellationTokenSource cancelTokenSource { get; set; } = new CancellationTokenSource();
         public static CancellationToken Token { get; set; } = cancelTokenSource.Token;
+        public static int TaskCount => -1;
         public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
         public static object clocker { get; } = new object();
         public static object llocker = new object();
@@ -54,21 +55,22 @@ namespace LeboncoinParcer
         public static void Start()
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            var linkpages = GetAllPages().ToList();
-            #region Tests
-            //var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
-            //File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
-            //List<string> linkpages = new List<string> { };
-            //BinaryFormatter formatter = new BinaryFormatter();
-            //////////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            //////////{
-            //////////    formatter.Serialize(fs, linkpages);
-            //////////}
+            //AdBox.GetValid(Token, 999);
+            var linkpages = GetAllPages();
+            //#region Tests
+            ////var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
+            ////File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
+            ////List<string> linkpages = new List<string> { };
+            BinaryFormatter formatter = new BinaryFormatter();
+            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            {
+                formatter.Serialize(fs, linkpages);
+            }
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    linkpages = (List<string>)formatter.Deserialize(fs);
             //}
-            #endregion
+            //#endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
             {
@@ -77,8 +79,12 @@ namespace LeboncoinParcer
             }
             var d = GetDic(RealtysUrls);
             DataBase.AddToDb(d);
-            UpdateDBitems(Token);
-            
+            d = null;
+            linkpages = null;
+            RealtysUrls = null;
+            //UpdateDBitems(Token);
+
+
         }
         public static void Export()
         {
@@ -148,12 +154,29 @@ namespace LeboncoinParcer
             DataBase.ParseAd(token);
             Parser.Log += "End of parsing".ToLogFormat();
         }
+
         public static IEnumerable<string> GetAllPages()
+        {
+            List<AdBox> list = AdBox.GetValid(Token, TaskCount);
+            List<string> result = new List<string> { };
+            //foreach(var o in list)
+            //{
+               
+            //}
+            Parallel.ForEach(list, new ParallelOptions { CancellationToken = Token }, o =>
+            {
+                result.AddRange(GetPages("/recherche/?category=10&owner_type=private&real_estate_type=1&square=" + $"{o.Startvalue}-{o.Endvalue}"));
+            });
+            
+            
+            return result;
+        }
+        public static IEnumerable<string> GetPages(string Path)
         {
             Log += "Getting ad links from search pages.".ToLogFormat();
             List<string> Parsed = new List<string> { };
             string url = "https://www.leboncoin.fr";
-            string path = "/recherche/?category=10&owner_type=private&real_estate_type=1";
+            string path = Path;
             int count = 1;
             while (path != null && !Token.IsCancellationRequested)
             {
@@ -161,12 +184,31 @@ namespace LeboncoinParcer
                 while (page == null && !Token.IsCancellationRequested)
                     page = GetPage(url + path, ProxyTimeout);
                 Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
-                yield return page;
                 path = Parse(page);
                 Log += $"Downloaded page#{count}".ToLogFormat();
                 count++;
             }
+            return Parsed;
         }
+        //public static IEnumerable<string> GetPages(string Path)
+        //{
+        //    Log += "Getting ad links from search pages.".ToLogFormat();
+        //    List<string> Parsed = new List<string> { };
+        //    string url = "https://www.leboncoin.fr";
+        //    string path = Path;
+        //    int count = 1;
+        //    while (path != null && !Token.IsCancellationRequested)
+        //    {
+        //        string page = null;
+        //        while (page == null && !Token.IsCancellationRequested)
+        //            page = GetPage(url + path, ProxyTimeout);
+        //        Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
+        //        yield return page;
+        //        path = Parse(page);
+        //        Log += $"Downloaded page#{count}".ToLogFormat();
+        //        count++;
+        //    }
+        //}
         public static List<string> ParseRealtyUrl(string html)
         {
             var htmlDoc = new HtmlDocument();
@@ -379,6 +421,30 @@ namespace LeboncoinParcer
             catch (Exception exc) { }
             return null;
         }
+        public static int GetAdCount(AdBox adBox)
+        {
+            try
+            {
+                string page = null;
+                while (page == null && !Token.IsCancellationRequested)
+                    page = GetPage(("https://www.leboncoin.fr/recherche/?category=10&owner_type=private&real_estate_type=1&square=" + $"{adBox.Startvalue}-{adBox.Endvalue}"), Parser.ProxyTimeout);
+                var htmlDoc = new HtmlDocument();
+                htmlDoc.LoadHtml(page);
+                var results = HtmlEntity.DeEntitize(htmlDoc.DocumentNode.SelectSingleNode("//button[@data-qa-id='cta-search_submit-desktop']")?.InnerText ?? "");
+                results = System.Text.RegularExpressions.Regex.Replace(results, @"[^\d]+", "");
+                int count = Int32.Parse(results);
+                if (string.IsNullOrEmpty(results))
+                {
+                    throw new Exception("Parsing bug");
+                }
+                return count;
+            }
+            catch (Exception)
+            {
+
+            }
+            return -1;
+        }
     }
     class ProxyData
     {
@@ -500,6 +566,63 @@ namespace LeboncoinParcer
     {
         public int ProxyTimeout { get; set; }
         public string TableId { get; set; }
+    }
+    public class AdBox
+    {
+        //static int Min => 2500;
+        static int Max => 3000;
+        public string Startvalue { get; set; }
+        public string Endvalue { get; set; }
+        public int Count { get; set; }
+        public bool IsValid()
+        {
+            if (Count < Max)
+                return true;
+            return false;
+        }
+        static List<AdBox> Split(AdBox ad)
+        {
+            int st = Int32.Parse(ad.Startvalue);
+            int end = Int32.Parse(ad.Endvalue);
+            int tmp = (int)((end + st) / 2);
+            AdBox ad1 = new AdBox { Startvalue = ad.Startvalue, Endvalue = tmp.ToString() };
+            AdBox ad2 = new AdBox { Startvalue = (tmp + 1).ToString(), Endvalue = ad.Endvalue };
+            return new List<AdBox> { ad1, ad2 };
+        }
+        public static List<AdBox> GetValid(CancellationToken cts, int TaskCount = -1)
+        {
+            var options = new ParallelOptions { CancellationToken = cts };
+            if (TaskCount != -1)
+                options.MaxDegreeOfParallelism = TaskCount;
+            int start = 0;
+            int end = 300;
+            AdBox ad = new AdBox { Startvalue = $"{start}", Endvalue = $"{end}", Count = 99999999 };
+            List<AdBox> list = new List<AdBox> { ad };
+            var wrong = list.Where(x => (x.IsValid() == false)).ToList();
+            while (wrong.Count > 0 && !Parser.Token.IsCancellationRequested)
+            {
+                list.RemoveAll(x => (x.IsValid() == false));//TODO check wrong count == 1
+                Parallel.ForEach(wrong, options, o =>
+               {
+                   var splitted = Split(o);
+                   while (splitted[0].Count < 1 && splitted[1].Count < 1 && !Parser.Token.IsCancellationRequested)
+                   {
+                       splitted[0].Count = Parser.GetAdCount(splitted[0]);
+                       splitted[1].Count = Parser.GetAdCount(splitted[1]);
+                   }
+                   list.Add(splitted[0]);
+                   list.Add(splitted[1]);
+               }
+                );
+                //foreach (var o in wrong)
+                //{
+
+                //}
+                wrong = list.Where(x => (x.IsValid() == false)).ToList();
+            }
+            list.Add(new AdBox { Startvalue = $"301", Endvalue = "max" });
+            return list;
+        }
     }
 
 
