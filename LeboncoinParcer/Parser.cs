@@ -19,11 +19,12 @@ namespace LeboncoinParcer
     {
         public static CancellationTokenSource cancelTokenSource { get; set; } = new CancellationTokenSource();
         public static CancellationToken Token { get; set; } = cancelTokenSource.Token;
-        public static ParallelOptions Options => new ParallelOptions { CancellationToken = Token, MaxDegreeOfParallelism = 3 };
+        public static Settings Settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
+        public static ParallelOptions Options => new ParallelOptions { CancellationToken = Token, MaxDegreeOfParallelism = Settings.ThreadCount };
         public static List<DistrictContainer> Districts { get; } = Newtonsoft.Json.JsonConvert.DeserializeObject<List<DistrictContainer>>(File.ReadAllText("Districts.json"));
-        public static int TaskCount => -1;
-        public static int ProxyTimeout { get; set; } = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).ProxyTimeout;
+        public static int ProxyTimeout { get; set; } = Settings.ProxyTimeout;
         public static int PCount { get; set; }
+        public static Microsoft.Win32.TaskScheduler.Task TaskSchedule { get; }= GetSchedule();
         public static object PClocker { get; } = new object();
         public static object clocker { get; } = new object();
         public static object llocker = new object();
@@ -60,10 +61,12 @@ namespace LeboncoinParcer
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages();
-            //#region Tests
+            #region Tests
+            //var test = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
+            //test.ThreadCount = 3;
+            //File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(test));
+            //List<string> linkpages = new List<string> { };
             //////var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
-            //////File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
-            //////List<string> linkpages = new List<string> { };
             ////BinaryFormatter formatter = new BinaryFormatter();
             ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             ////{
@@ -73,7 +76,7 @@ namespace LeboncoinParcer
             ////{
             ////    linkpages = (List<string>)formatter.Deserialize(fs);
             ////}
-            //#endregion
+            #endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
             {
@@ -91,6 +94,45 @@ namespace LeboncoinParcer
         public static void Export()
         {
             LeboncoinParcer.Sheets.Export(DataBase.Get());
+        }
+        public static void AddSchedule(DateTime DateSchedule,short DaysInterval=1)
+        {
+            try
+            {
+                using (Microsoft.Win32.TaskScheduler.TaskService ts = new Microsoft.Win32.TaskScheduler.TaskService())
+                {
+                    var test = ts.FindTask("StartScrapping");
+                    if (test != null)
+                        ts.RootFolder.DeleteTask("StartScrapping");
+                    Microsoft.Win32.TaskScheduler.TaskDefinition td = ts.NewTask();
+                    td.RegistrationInfo.Description = "Start scrapping";
+                    td.Triggers.Add(new Microsoft.Win32.TaskScheduler.DailyTrigger { StartBoundary = DateSchedule, DaysInterval = DaysInterval });
+                    string command = $"cd /d {Environment.CurrentDirectory} & LeboncoinParcer.exe Start";
+                    System.IO.File.WriteAllText("Scheduler.bat", command);
+                    var path = new System.IO.FileInfo("Scheduler.bat").FullName;
+                    td.Actions.Add(new Microsoft.Win32.TaskScheduler.ExecAction(path, null, null));
+                    ts.RootFolder.RegisterTaskDefinition(@"StartScrapping", td);
+                }
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
+        }
+        public static Microsoft.Win32.TaskScheduler.Task GetSchedule()
+        {
+            try
+            {
+                using (Microsoft.Win32.TaskScheduler.TaskService ts = new Microsoft.Win32.TaskScheduler.TaskService())
+                {
+                    return ts.FindTask("StartScrapping");
+                }
+            }
+            catch (Exception exc)
+            {
+                exc.Write(MainWindow.Locker);
+            }
+            return null;
         }
         public static Realty ParseRealty(Realty R, string html)
         {
@@ -168,13 +210,9 @@ namespace LeboncoinParcer
 
         public static IEnumerable<string> GetAllPages()
         {
-
             List<AdBox> list = AdBox.GetValid();
             List<string> result = new List<string> { };
-            //foreach(var o in list)
-            //{
-
-            //}
+            Log += "Getting ad links from search pages.".ToLogFormat();
             try
             {
                 Parallel.ForEach(list, Options, o =>
@@ -188,7 +226,7 @@ namespace LeboncoinParcer
         }
         public static IEnumerable<string> GetPages(string Path)
         {
-            Log += "Getting ad links from search pages.".ToLogFormat();
+            
             List<string> Parsed = new List<string> { };
             string url = "https://www.leboncoin.fr";
             string path = Path;
@@ -197,7 +235,7 @@ namespace LeboncoinParcer
                 string page = null;
                 while (page == null && !Token.IsCancellationRequested)
                     page = GetPage(url + path, ProxyTimeout);
-                Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
+                Parsed.Add(page);
                 path = Parse(page);
                 lock (PClocker)
                 {
@@ -568,6 +606,7 @@ namespace LeboncoinParcer
     {
         public int ProxyTimeout { get; set; }
         public string TableId { get; set; }
+        public int ThreadCount { get; set; }
     }
     public class AdBox
     {

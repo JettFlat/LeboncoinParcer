@@ -33,6 +33,13 @@
                         <Button Margin="5 5 5 5" Content="Update" Command="{Binding Update}" IsEnabled="{Binding UpVisible}"/>
                         <Button Margin="5 5 5 5" Content="Export" Command="{Binding Export}" IsEnabled="{Binding ExportEnable}"/>
                         <Button Margin="5 5 5 5" Content="Clear Log" Command="{Binding Clear}"/>
+                        <DatePicker SelectedDate="{Binding DatePicker}"/>
+                        <materialDesign:TimePicker SelectedTime="{Binding TimePicker}"/>
+                        <TextBlock Text="{Binding DateScheduleString}"/>
+                        <Button Margin="5 5 5 5" Content="Add to Schedule" Command="{Binding AddSchedule}"/>
+                        <CheckBox IsHitTestVisible="false" Content="Task Schedule Already Exists" IsChecked="{Binding IsScheduleOn}"/>
+                        <TextBox HorizontalAlignment="Center" Width="20" Margin="10 0 0 0" VerticalAlignment="Center" Text="{Binding DaysInterval,Mode=TwoWay}"/>
+                        <TextBlock VerticalAlignment="Center" Text="Days Interval"/>
                     </WrapPanel>
                 </StackPanel>
             </materialDesign:Card>

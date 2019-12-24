@@ -37,7 +37,7 @@ namespace LeboncoinParcer
                 HttpClientInitializer = credential,
                 ApplicationName = ApplicationName,
             });
-            String spreadsheetId = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json")).TableId;
+            String spreadsheetId = Parser.Settings.TableId;
 
             var sheets = service.Spreadsheets.Get(spreadsheetId).Execute().Sheets;
             string sheetName = "Data";

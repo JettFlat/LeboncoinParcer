@@ -1,18 +1,10 @@
 ﻿using LeboncoinParcer;
 using SQLiteAspNetCoreDemo;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 namespace LeboncoinParser
 {
@@ -20,6 +12,11 @@ namespace LeboncoinParser
     {
         public VM() : base()
         {
+            var args = Environment.GetCommandLineArgs().ToList();
+            if (args.Contains("Start"))
+            {
+                Start.Execute(null);
+            }
             Subscribe();
             MovieView = GetMovieCollectionView(Realties);
             MovieView.Filter = OnFilterMovie;
@@ -33,6 +30,54 @@ namespace LeboncoinParser
                 _Text = value;
                 Parser.ProxyTimeout = Int32.Parse(_Text);
                 OnPropertyChanged();
+            }
+        }
+        //DateTime _DateSchedule= DateTime.Now;
+        public DateTime DateSchedule = DateTime.Now;
+        public bool _IsScheduleOn = (Parser.TaskSchedule != null);
+        public bool IsScheduleOn
+        {
+            get => _IsScheduleOn;
+            set
+            {
+                _IsScheduleOn = value;
+                OnPropertyChanged();
+            }
+        }
+        string _DaysInterval = "1";
+        public string DaysInterval
+        {
+            get => _DaysInterval;
+            set
+            {
+                _DaysInterval = value;
+                OnPropertyChanged();
+            }
+        }
+        DateTime _TimePicker = DateTime.Now;
+        public DateTime TimePicker
+        {
+            get => _TimePicker;
+            set
+            {
+                _TimePicker = value;
+                DateSchedule = new DateTime(DatePicker.Year, DatePicker.Month, DatePicker.Day, TimePicker.Hour, TimePicker.Minute, TimePicker.Second, TimePicker.Millisecond, DatePicker.Kind);
+                //DateScheduleString = DateSchedule.ToString();
+                OnPropertyChanged();
+                OnPropertyChanged("DateScheduleString");
+            }
+        }
+        DateTime _DatePicker = DateTime.Now;
+        public DateTime DatePicker
+        {
+            get => _DatePicker;
+            set
+            {
+                _DatePicker = value;
+                DateSchedule = new DateTime(DatePicker.Year, DatePicker.Month, DatePicker.Day, TimePicker.Hour, TimePicker.Minute, TimePicker.Second, TimePicker.Millisecond, DatePicker.Kind);
+                //DateScheduleString = DateSchedule.ToString();
+                OnPropertyChanged();
+                OnPropertyChanged("DateScheduleString");
             }
         }
         bool _Visible { get; set; } = true;
@@ -234,7 +279,7 @@ namespace LeboncoinParser
             Realty t = item as Realty;
             if (t != null)
             {
-                if ((t.Phone ?? "").Contains(PhoneFilter) && (t.Name?? "").Contains(NameFilter) && (t.LocalisationTown ?? "").Contains(LocationFilter) &&
+                if ((t.Phone ?? "").Contains(PhoneFilter) && (t.Name ?? "").Contains(NameFilter) && (t.LocalisationTown ?? "").Contains(LocationFilter) &&
                     (t.Type ?? "").Contains(TypeFilter) && (t.Surface ?? "").Contains(SurfaceFilter) && (t.Furniture ?? "").Contains(FurnitureFilter) &&
                     (t.Ges ?? "").Contains(GesFilter) && (t.EnergyClass ?? "").Contains(EnergyClassFilter) && (t.Status ?? "").Contains(StatusFilter) &&
                     t.Rooms.ToString().Contains(RoomsFilter) && t.Date.ToString("MM/dd/yyyy h:mm tt").Contains(DateFilter) &&
@@ -314,6 +359,16 @@ namespace LeboncoinParser
             {
                 exc.Write(MainWindow.Locker);
             }
+        });
+        public RelayCommand AddSchedule => new RelayCommand(o =>
+        {
+            short interval = 1;
+            try
+            {
+                interval = short.Parse(DaysInterval);
+            }
+            catch (Exception) { }
+            Parser.AddSchedule(DateSchedule, interval);
         });
         public RelayCommand Reqnavigate => new RelayCommand(o =>
         {
