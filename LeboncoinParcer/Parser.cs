@@ -55,17 +55,16 @@ namespace LeboncoinParcer
         public static void Start()
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
-            //AdBox.GetValid(Token, 999);
             var linkpages = GetAllPages();
             //#region Tests
             ////var tewst = new Settings { ProxyTimeout = 4000, TableId = "1AKP9CPyQ468Z3QKMggbfB4UlpSbbQ9XSUm0Hl6j4gS4" };
             ////File.WriteAllText("Settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(tewst));
             ////List<string> linkpages = new List<string> { };
-            BinaryFormatter formatter = new BinaryFormatter();
-            using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            {
-                formatter.Serialize(fs, linkpages);
-            }
+            //BinaryFormatter formatter = new BinaryFormatter();
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    formatter.Serialize(fs, linkpages);
+            //}
             //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
             //{
             //    linkpages = (List<string>)formatter.Deserialize(fs);
@@ -77,13 +76,12 @@ namespace LeboncoinParcer
                 var items = ParseRealtyUrl(o);
                 RealtysUrls.AddRange(items);
             }
+            linkpages = null;
             var d = GetDic(RealtysUrls);
+            RealtysUrls = null;
             DataBase.AddToDb(d);
             d = null;
-            linkpages = null;
-            RealtysUrls = null;
-            //UpdateDBitems(Token);
-
+            UpdateDBitems(Token);
 
         }
         public static void Export()
@@ -149,7 +147,7 @@ namespace LeboncoinParcer
             }
             return null;
         }
-        public static void UpdateDBitems(CancellationToken token)
+        public static void UpdateDBitems(CancellationToken token, bool UseReWrite = false)
         {
             DataBase.ParseAd(token);
             Parser.Log += "End of parsing".ToLogFormat();
@@ -190,25 +188,6 @@ namespace LeboncoinParcer
             }
             return Parsed;
         }
-        //public static IEnumerable<string> GetPages(string Path)
-        //{
-        //    Log += "Getting ad links from search pages.".ToLogFormat();
-        //    List<string> Parsed = new List<string> { };
-        //    string url = "https://www.leboncoin.fr";
-        //    string path = Path;
-        //    int count = 1;
-        //    while (path != null && !Token.IsCancellationRequested)
-        //    {
-        //        string page = null;
-        //        while (page == null && !Token.IsCancellationRequested)
-        //            page = GetPage(url + path, ProxyTimeout);
-        //        Parsed.Add(page);//File.WriteAllText($@"pages/{count}.html", page);
-        //        yield return page;
-        //        path = Parse(page);
-        //        Log += $"Downloaded page#{count}".ToLogFormat();
-        //        count++;
-        //    }
-        //}
         public static List<string> ParseRealtyUrl(string html)
         {
             var htmlDoc = new HtmlDocument();

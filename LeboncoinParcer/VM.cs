@@ -286,7 +286,7 @@ namespace LeboncoinParser
                 Parser.Resettoken();
                 Visible = false;
                 UpVisible = false;
-                Task.Run(() => { Parser.UpdateDBitems(Parser.Token); Visible = true; UpVisible = true; });
+                Task.Run(() => { Parser.UpdateDBitems(Parser.Token,true); Visible = true; UpVisible = true; });
             }
             catch (Exception exc)
             {

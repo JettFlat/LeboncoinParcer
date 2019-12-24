@@ -94,7 +94,7 @@ namespace SQLiteAspNetCoreDemo
         //            break;
         //    }
         ////}
-        public static void ParseAd(CancellationToken token)
+        public static void ParseAd(CancellationToken token, bool UseRewrite=false)
         {
             //CreateDB();
             Parser.Log += "Starting parsing/updating all ads.".ToLogFormat();
@@ -125,10 +125,14 @@ namespace SQLiteAspNetCoreDemo
                            using (var context = new SQLiteDBContext())
                            {
                                //Parser.Log += $"Parsing {o.Url} page".ToLogFormat();
+                               var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
+                               if(UseRewrite==false && !string.IsNullOrWhiteSpace(item.Phone))
+                               {
+                                   return;
+                               }
                                string page = null;
                                while (page == null)
                                    page = Parser.GetPage(o.Url, Parser.ProxyTimeout);
-                               var item = context.Realtys.FirstOrDefault(x => x.Id == o.Id);
                                if (page == "skip")
                                {
                                    Parser.Log += $"Page {count}/{list.Count} broken {o.Url} ".ToLogFormat();
