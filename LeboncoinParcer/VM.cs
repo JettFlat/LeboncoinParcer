@@ -15,8 +15,7 @@ namespace LeboncoinParser
             var args = Environment.GetCommandLineArgs().ToList();
             if (args.Contains("Start"))
             {
-                Start.Execute(null);
-                Environment.Exit(0);
+                Start.Execute("Exit");
             }
             Subscribe();
             MovieView = GetMovieCollectionView(Realties);
@@ -298,7 +297,10 @@ namespace LeboncoinParser
                 Parser.Resettoken();
                 Visible = false;
                 UpVisible = false;
-                Task.Run(() => { Parser.Start(); Visible = true; UpVisible = true; });
+                bool exit = false;
+                if (((string)o ?? "") == "Exit")
+                    exit = true;
+                Task.Run(() => { Parser.Start(exit); Visible = true; UpVisible = true; });
             }
             catch (Exception exc)
             {

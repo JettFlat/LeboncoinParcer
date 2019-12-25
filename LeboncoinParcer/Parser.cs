@@ -57,7 +57,7 @@ namespace LeboncoinParcer
             cancelTokenSource = new CancellationTokenSource();
             Token = cancelTokenSource.Token;
         }
-        public static void Start()
+        public static void Start(bool Exit=false)
         {
             ProxyContainer.Allbaned += ProxyContainer_Allbaned;
             var linkpages = GetAllPages();
@@ -89,6 +89,8 @@ namespace LeboncoinParcer
             DataBase.AddToDb(d);
             d = null;
             UpdateDBitems();
+            if (Exit)
+                Environment.Exit(0);
 
         }
         public static void Export()
