@@ -16,6 +16,7 @@ namespace LeboncoinParser
             if (args.Contains("Start"))
             {
                 Start.Execute(null);
+                Environment.Exit(0);
             }
             Subscribe();
             MovieView = GetMovieCollectionView(Realties);
