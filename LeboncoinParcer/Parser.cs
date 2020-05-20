@@ -72,10 +72,10 @@ namespace LeboncoinParcer
             ////{
             ////    formatter.Serialize(fs, linkpages);
             ////}
-            ////using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
-            ////{
-            ////    linkpages = (List<string>)formatter.Deserialize(fs);
-            ////}
+            //using (FileStream fs = new FileStream("pages.ser", FileMode.OpenOrCreate))
+            //{
+            //    linkpages = (List<string>)formatter.Deserialize(fs);
+            //}
             #endregion
             List<string> RealtysUrls = new List<string> { };
             foreach (var o in linkpages)
